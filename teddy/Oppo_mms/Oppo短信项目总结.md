@@ -10,19 +10,49 @@
 
 ### 1.1、Android Studio快捷键
 
+#### 1.1.1、代码阅读及查看
+
 Ctrl + Alt + H，查看某个方法的全部调用栈
 
 Ctrl + H，查看某个类的继承关系
 
 Ctrl + Shift + H，查看某个方法有哪些继承实现
 
-Ctrl + Shift + F7，在文件中高亮显示某个字符串，F3或Shift+F3可以上下移动
-
-Ctrl + Shift + I，弹窗查看某个类的实现
+Ctrl + Shift + I，快速查看某个方法、类、接口的内容
 
 Ctrl + Alt + F7，弹窗查看某个符号的所有引用
 
 Alt + 7，查看某个类的详情，可以展示某个方法是从哪个接口继承的
+
+Ctrl + U，查看某个方法是从哪个接口或者父类继承的
+
+Ctrl + Alt + B，跳转到抽象方法的实现
+
+Alt + F7，快速查找某个类、方法、变量、资源id被调用的地方
+
+#### 1.1.2、查找、替换
+
+Ctrl + Shift + F7，在文件中高亮显示某个字符串，F3或Shift+F3可以上下移动
+
+#### 1.1.3、编辑视窗快捷功能
+
+Ctrl + W，选中代码块，多次按会扩大范围
+
+Ctrl + D，快速复制行
+
+Ctrl + Shift + ↑ ↓，上下移动代码，如果是方法中的代码，不能挪出方法
+
+Shift + Alt + ↑ ↓，上下移动代码，可以跨方法移动
+
+Alt + Insert，快速插入代码，生成构造方法、Getter/Setter方法等
+
+Alt + Enter，快速修复错误
+
+#### 1.1.4、窗口&面板
+
+Ctrl + Shift + F12，快速调整代码编辑窗口的大小
+
+Shift + Esc，关闭当前打开的面板
 
 
 
@@ -638,7 +668,7 @@ ShopEntry shopEntry = PushMessageSQLiteHelper.getInstance(ctx).queryShopEntry(mS
 // 通过uiHandler回调listener...
 ```
 
-#### 3.1、PushMessageListAdapter在PushMessageListActivity中的依赖
+### 3.1、PushMessageListAdapter在PushMessageListActivity中的依赖
 
 1. `refreshListView(boolean needReSelect)`
 
@@ -846,7 +876,157 @@ ShopEntry shopEntry = PushMessageSQLiteHelper.getInstance(ctx).queryShopEntry(mS
 
     
 
-11. `onStatusBarClicked()` - 
+11. `onStatusBarClicked()` - **callback** - **1** register in `PushMessageListActivity.onCreate(Bundle)`
+
+    register code:
+
+    ```java
+    mStatusUtil = new ColorStatusBarResponseUtil(this);
+    mStatusUtil.setStatusBarClickListener(this);
+    ```
+
+    ```java
+    ......;
+    if (null != mMsgListAdapter) {
+        mMsgListAdapter.dismissFloatPanelView();
+    }
+    // 与数据无关，消除悬浮panel
+    ```
+
+    
+
+12. `onClick(View v)` - **callback** - **4** register in `PushMessageListActivity`
+
+    - `initResourceRefs()` **2** usages
+
+    - `initSimChangeButton()` **2** usages
+
+    register code:
+
+    ```java
+    private void initResourceRefs() {
+        ......;
+        mSendButton.setOnClickListener(this);
+        ......;
+        mRemindview.setOnClickListener(this);
+        ......;
+    }
+    private void initSimChangeButton() {
+        ......;
+        mSim1Button.setOnClickListener(this);
+        mSim2Button.setOnClickListener(this);
+        ......;
+    }
+    ```
+
+    ```java
+    case R.id.unread_scroll_textview:
+        reCalFirstUnreadOffset();
+        int count = mMsgListAdapter.getCount();
+        int position = (count - mFirstUnreadOffset >= 0) ? count - mFirstUnreadOffset : 0;
+        mMsgListView.smoothScrollToPosition(position);
+        mFirstUnreadOffset = 0;
+        mFirstUnreadMsgId = null;
+        mUnreadCount = 0;
+        hideUnreadScrollView();
+    // 可以改为部分加载
+    // mFirstUnreadOffset记录从底部到未读第一条的偏移量，本地数据足够计算
+    // 问题是部分加载不能完全展示所有未读的消息
+    ```
+
+13. `onKeyDown(int keyCode, KeyEvent keyEvent)` 
+
+    ```java
+    if (keyCode == KeyEvent.KEYCODE_BACK) {
+        if (keyEvent.getRepeatCount() == 0 && mMsgListAdapter != null) {
+            if (mMsgListAdapter.needEnterTwiceBackKey()) {
+                mMsgListAdapter.onKeyDown();
+                return true;
+            }
+        }
+    }
+    // 与数据无关，为了关闭悬浮弹窗
+    ```
+
+    
+
+14. `sendMessage(String serviceId, final String content, final String phone, String name, long threadId, String imsi)` - **2** references
+
+    ```java
+    PmmsEntry pmmsEntry = mPushMessageManager.getRightImsiPmmsEntry(PushMessageListActivity.this, mMsgListAdapter.getReceivePmmsEntryList(), imsi);
+    // 对数据完整性有依赖，如果本地只有部分数据，会影响逻辑！
+    // 查询匹配imsi且NetPayload非空的最后一条，如果查询失败，需要用补偿逻辑从数据库再查
+    ```
+
+    
+
+15. `onMultiWindowModeChanged(boolean isInMultiWindowMode, Configuration configuration)` - **callback**
+
+    ```java
+    if (null != mMsgListAdapter) {
+        mMsgListAdapter.setIsInMultiWindowMode(isInMultiWindowMode);
+        mMsgListAdapter.notifyDataSetChanged();
+        mMsgListAdapter.dismissFloatPanelView();
+    }
+    // 与数据无关，分屏模式的处理
+    ```
+
+    
+
+16. `reCalFirstUnreadOffset()`
+
+    ```java
+    for (int i = 0; i < mMsgListAdapter.getCount(); i++) {
+        PmmsEntry entry = mMsgListAdapter.getItem(i);
+        if (entry != null && TextUtils.equals(entry.getMessageId(), mFirstUnreadMsgId)) {
+            mFirstUnreadOffset = mMsgListAdapter.getCount() - i - 1;
+            break;
+        }
+    }
+    // 对数据完整性有依赖，如果只返回部分数据，会影响逻辑！
+    // getUnreadOffset()是根据list数据遍历的，这块儿还需要参考一下ComposeMessageActivity的实现方法
+    ```
+
+    
+
+### 3.2、修改思路
+
+#### 3.2.1、数据获取
+
+```java
+public void getMessagesByServiceId(String serviceId, String where, boolean isBlocked, OnPmmsReceivedListener listener);
+// 给此函数增加带有数量限制的参数的重载
+-----------------------------------------------------------------
+透传给GetPmmsByServiceId对象
+[OK!仅此一次路径调用]
+
+-----------------------------------------------------------------
+透传给PushMessageSQLiteHelper#getPmmsEntryListByServiceId()
+[OK!仅此一次路径调用]
+
+-----------------------------------------------------------------
+透传给PushMessageSQLiteHelper#getPmmsEntryList()
+[OK!仅此一次路径调用]
+
+-----------------------------------------------------------------
+使用QueryParameter透传给PushMessageProvider#query()
+[OK!没有添加QueryParameter的路径不受影响]
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
