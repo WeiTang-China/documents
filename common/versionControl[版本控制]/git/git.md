@@ -1,10 +1,13 @@
 | 版本 | 修订人 |   日期   | 描述                        |
 | :--: | :----: | :------: | :-------------------------- |
+|  --  |  唐炜  | 2019-6-5 | 增加章节2.1、2.2、2.3       |
 |  --  |  唐炜  | 2019-6-3 | 增加对git各个分区理解的文档 |
 
 
 
 # 1、工作区、暂存区、版本库、远程仓库
+
+## 1.1、各分区的关系
 
 Git本地有四个工作区域：工作目录（Working Directory）、暂存区(Stage/Index)、资源库(Repository或Git Directory)、git仓库(Remote Directory)。
 
@@ -52,6 +55,55 @@ GIT不关心文件两个版本之间的具体差别，而是关心文件的整�
  下面的图很好的解释了这四种状态的转变：
 
 ![](files\git_file_state_transfer.png)
+
+
+
+# 2、使用技巧
+
+## 2.1、切换difftool
+
+global的配置存在~/.gitconfig中 
+
+mergetool的配置在.gitconfig中修改，如下所示（注意缩进）： 
+
+```properties
+[merge]
+    tool = bc3
+
+[mergetool "bc3"]
+    path = /d/installed/Beyond Compare 3/BCompare.exe
+    keepBackup = false
+    trustExitCode = false
+```
+
+
+
+## 2.2、快捷sync & push脚本(免输入当前的branch)
+
+把files目录中的gitpush.sh和gitsync.sh拷贝到git对应的上下文目录中，例如：
+windows
+    `D:\installed\Git\usr\bin`
+linux
+    `/home/mine/bin/`
+
+
+
+## 2.3、使用alias增强git log输出
+
+shell终端下不能gitk，完全需要用log来查看，新增一个或几个alias快捷命令：
+`git config --global alias.slog 'log --color --oneline --decorate'`
+
+- --decorate[=short|full|auto|no]
+  Print out the ref names of any commits that are shown. If short is specified, the ref name prefixes refs/heads/, refs/tags/ and refs/remotes/ will not be printed. If full is specified, the full ref name (including prefix) will be printed. If auto is specified, then if the output is going to a terminal, the ref names are shown as if short were given, otherwise no ref names are shown. The default option is short.
+
+- --oneline
+  This is a shorthand for "--pretty=oneline --abbrev-commit" used together.
+
+- 查询相关提交人的，模糊匹配
+  --author=
+
+- 查询commitlog相关，模糊匹配
+  --grep=''
 
 
 
