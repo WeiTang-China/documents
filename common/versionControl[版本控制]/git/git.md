@@ -76,6 +76,8 @@ mergetool的配置在.gitconfig中修改，如下所示（注意缩进）：
     trustExitCode = false
 ```
 
+或者使用git config --global --add merge.tool="bc3"来添加
+
 
 
 ## 2.2、快捷sync & push脚本(免输入当前的branch)
