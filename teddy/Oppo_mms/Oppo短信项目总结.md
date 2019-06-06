@@ -36,6 +36,8 @@ Ctrl + Shift + F7，在文件中高亮显示某个字符串，F3或Shift+F3可�
 
 #### 1.1.3、编辑视窗快捷功能
 
+F2，定位编译错误的位置
+
 Ctrl + W，选中代码块，多次按会扩大范围
 
 Ctrl + D，快速复制行
@@ -50,9 +52,11 @@ Alt + Enter，快速修复错误
 
 #### 1.1.4、窗口&面板
 
-Ctrl + Shift + F12，快速调整代码编辑窗口的大小
+Ctrl + Shift + F12，快速最大化代码编辑窗口
 
 Shift + Esc，关闭当前打开的面板
+
+Shift + Click，关闭窗口
 
 
 
@@ -226,8 +230,9 @@ PullToRefreshListView的状态图如下所示：
 ```java
 // ComposeMessageActivity.mHasMoreMessage
 // OnQueryComplete()回调中改写，请求的数量等于Cusor返回的数量，则认为有更多消息
-mHasMoreMessage=(mMsgListAdapter.getCount()==mDisplayMessageCount);
+mHasMoreMessage = mMsgListAdapter.getCount() < mDisplayMessageCount;
 // ComposeMessageActivity.onScrollItemAfterItemListener.onScroll()中使用，设置firstItemIndex
+// firstItemIndex对于判断是否到顶后的下拉事件非常关键!!!
 if (mHasMoreMessage && !mIsSearchMessage) {
 	mMsgListView.setFirstItemIndex(firstVisibleItem);
 }
@@ -994,8 +999,9 @@ ShopEntry shopEntry = PushMessageSQLiteHelper.getInstance(ctx).queryShopEntry(mS
 #### 3.2.1、数据获取
 
 ```java
-public void getMessagesByServiceId(String serviceId, String where, boolean isBlocked, OnPmmsReceivedListener listener);
+PushMessageManager#getMessagesByServiceId()
 // 给此函数增加带有数量限制的参数的重载
+此函数有两种调用路径：1、正常查询不带参数；2、查询未读消息，用来标记已读状态
 -----------------------------------------------------------------
 透传给GetPmmsByServiceId对象
 [OK!仅此一次路径调用]
@@ -1014,7 +1020,19 @@ public void getMessagesByServiceId(String serviceId, String where, boolean isBlo
 
 ```
 
+#### 3.2.2、界面调整
 
+```java
+PushMessageListActivity增加成员变量mDisplayCount，表示当前最多取多少条
+
+-----------------------------------------------------------------
+PushMessageListActivity增加成员变量mDisplayCount，表示是否还有更多消息
+PushMessageListActivity#refreshListView()的取数据回调中，记录到mHasMoreMessage
+
+-----------------------------------------------------------------
+ComposeMessageActivity中的复杂滚动刷新逻辑，原界面中并未实现
+
+```
 
 
 
