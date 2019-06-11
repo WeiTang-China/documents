@@ -3649,20 +3649,356 @@ SQLite Version
 
 
 
+## 1.42、[FOREIGN KEY 外键关联约束](https://www.sqlite.org/foreignkeys.html)
 
+FOREIGN KEY外键关联约束被用来约束表之间的”存在“关系。例如，
 
+```sqlite
+CREATE TABLE artist(
+  artistid    INTEGER PRIMARY KEY, 
+  artistname  TEXT
+);
+CREATE TABLE track(
+  trackid     INTEGER,
+  trackname   TEXT, 
+  trackartist INTEGER     -- Must map to an artist.artistid!
+);
+```
 
+使用该数据库的应用程序会认为每一行*track*都存在对应的*artist*，正如声明中的注释所描述的一样。但是，如果用户使用外部工具修改了数据库或者程序存在bug，那么*track*中的行可能会出现在*artist*中找不到对应的情况。或者从artist表中删除行，在track表中留下不符合artist中剩余行的孤立行。这可能导致应用程序或应用程序稍后出现故障，或者至少使应用程序编码更加困难。
 
+一种解决方案是在数据库模式中添加一个SQL外键约束，以强制artist和track之间的关系。为此，可以通过将track的声明修改为以下来添加外键定义：
 
+```sqlite
+CREATE TABLE track(
+  trackid     INTEGER, 
+  trackname   TEXT, 
+  trackartist INTEGER,
+  FOREIGN KEY(trackartist) REFERENCES artist(artistid)
+);
+```
 
+通过这种方式，`Sqlite`被强制添加约束,当尝试向track表插入一条和artist表中没有关联的数据时候会失败。当从artist表中删除一条和track表有关联的数据会触发异常(Foreign Key Constraint Exception)。在`SQL`中表示，这意味着对于*track*表中的每一行，以下表达式的计算结果为true：
 
+```sqlite
+trackartist IS NULL OR EXISTS(SELECT 1 FROM artist WHERE artistid=trackartist)
+```
 
+以下`SQLite`命令行会话说明了添加到*track*表的外键约束的效果:
 
+```sqlite
+sqlite> SELECT * FROM artist;
+artistid  artistname       
+--------  -----------------
+1         Dean Martin      
+2         Frank Sinatra    
 
+sqlite> SELECT * FROM track;
+trackid  trackname          trackartist
+-------  -----------------  -----------
+11       That's Amore       1  
+12       Christmas Blues    1  
+13       My Way             2  
 
+sqlite> -- This fails because the value inserted into the trackartist column (3)
+sqlite> -- does not correspond to row in the artist table.
+sqlite> INSERT INTO track VALUES(14, 'Mr. Bojangles', 3);
+SQL error: foreign key constraint failed
 
+sqlite> -- This succeeds because a NULL is inserted into trackartist. A
+sqlite> -- corresponding row in the artist table is not required in this case.
+sqlite> INSERT INTO track VALUES(14, 'Mr. Bojangles', NULL);
 
+sqlite> -- Trying to modify the trackartist field of the record after it has 
+sqlite> -- been inserted does not work either, since the new value of trackartist (3)
+sqlite> -- Still does not correspond to any row in the artist table.
+sqlite> UPDATE track SET trackartist = 3 WHERE trackname = 'Mr. Bojangles';
+SQL error: foreign key constraint failed
 
+sqlite> -- Insert the required row into the artist table. It is then possible to
+sqlite> -- update the inserted row to set trackartist to 3 (since a corresponding
+sqlite> -- row in the artist table now exists).
+sqlite> INSERT INTO artist VALUES(3, 'Sammy Davis Jr.');
+sqlite> UPDATE track SET trackartist = 3 WHERE trackname = 'Mr. Bojangles';
+
+sqlite> -- Now that "Sammy Davis Jr." (artistid = 3) has been added to the database,
+sqlite> -- it is possible to INSERT new tracks using this artist without violating
+sqlite> -- the foreign key constraint:
+sqlite> INSERT INTO track VALUES(15, 'Boogie Woogie', 3);
+```
+
+正如您所料，通过删除或更新*artist*表中的行，无法将数据库操作为违反外键约束的状态:
+
+```sqlite
+sqlite> -- Attempting to delete the artist record for "Frank Sinatra" fails, since
+sqlite> -- the track table contains a row that refer to it.
+sqlite> DELETE FROM artist WHERE artistname = 'Frank Sinatra';
+SQL error: foreign key constraint failed
+
+sqlite> -- Delete all the records from the track table that refer to the artist
+sqlite> -- "Frank Sinatra". Only then is it possible to delete the artist.
+sqlite> DELETE FROM track WHERE trackname = 'My Way';
+sqlite> DELETE FROM artist WHERE artistname = 'Frank Sinatra';
+
+sqlite> -- Try to update the artistid of a row in the artist table while there
+sqlite> -- exists records in the track table that refer to it. 
+sqlite> UPDATE artist SET artistid=4 WHERE artistname = 'Dean Martin';
+SQL error: foreign key constraint failed
+
+sqlite> -- Once all the records that refer to a row in the artist table have
+sqlite> -- been deleted, it is possible to modify the artistid of the row.
+sqlite> DELETE FROM track WHERE trackname IN('That''s Amore', 'Christmas Blues');
+sqlite> UPDATE artist SET artistid=4 WHERE artistname = 'Dean Martin';
+```
+
+`SQLite`使用以下术语:
+
+- **parent table**是外键约束引用的表。 本节示例中的**parent table**是*artist*表。 有些书和文章将此称为**referenced table**，这可以说是更正确的，但往往会导致混淆。
+- **child table**是应用外键约束的表和包含REFERENCES子句的表。 本节中的示例使用*track*表作为子表。 其他书籍和文章将此称为**referencing table**。
+- **parent key**是外键约束引用的父表中的列或列集。 这通常是（但不总是）父表的主键。 **parent key**必须是父表中的一个或多个命名列，而不是[rowid](https://www.sqlite.org/lang_createtable.html#rowid)。
+- **child key**是子表中的列或列集，它们受外键约束约束并且包含REFERENCES子句。
+
+### 1.42.1、Enabling Foreign Key Support
+
+为了在SQLite中使用外键约束，在编译时必须不能定义[SQLITE_OMIT_FOREIGN_KEY](https://www.sqlite.org/compile.html#omit_foreign_key)或[SQLITE_OMIT_TRIGGER](https://www.sqlite.org/compile.html#omit_trigger)。
+
+- 如果SQLITE_OMIT_TRIGGER已定义但SQLITE_OMIT_FOREIGN_KEY未定义，则SQLite的行为与[版本3.6.19](https://www.sqlite.org/releaselog/3_6_19.html)（2009-10-14）之前的行为相同 - 外键解析定义并使用[PRAGMA foreign_key_list](https://www.sqlite.org/pragma.html#pragma_foreign_key_list)查询定义，但不强制执行外键约束。 [PRAGMA foreign_keys](https://www.sqlite.org/pragma.html#pragma_foreign_keys)命令在此配置中是无操作。 
+- 如果定义了OMIT_FOREIGN_KEY，则无法解析外键定义（尝试指定外键定义是语法错误）。
+
+假设在使用外键约束的情况下编译库，应用程序在运行时仍必须使用[PRAGMA foreign_keys](https://www.sqlite.org/pragma.html#pragma_foreign_keys)命令启用它。 例如:
+
+```sqlite
+sqlite> PRAGMA foreign_keys = ON;
+```
+
+默认情况下禁用外键约束（为了向后兼容），因此必须为每个[数据库连接](https://www.sqlite.org/c3ref/sqlite3.html)单独启用。 （但请注意，SQLite的未来版本可能会更改，以便默认情况下启用外键约束。小心的开发人员不会对默认情况下是否启用外键进行任何假设，而是根据需要启用或禁用它们。） 应用程序还可以使用[PRAGMA foreign_keys](https://www.sqlite.org/pragma.html#pragma_foreign_keys)语句来确定当前是否启用了外键。 以下命令行会话演示了这一点:
+
+```sqlite
+sqlite> PRAGMA foreign_keys;
+0
+sqlite> PRAGMA foreign_keys = ON;
+sqlite> PRAGMA foreign_keys;
+1
+sqlite> PRAGMA foreign_keys = OFF;
+sqlite> PRAGMA foreign_keys;
+0
+```
+
+Tip: 如果命令`PRAGMA foreign_keys`不返回任何数据而不是包含“0”或“1”的单行，那么您使用的SQLite版本不支持外键（版本低于3.6.19 或 编译时使用[SQLITE_OMIT_FOREIGN_KEY](https://www.sqlite.org/compile.html#omit_foreign_key)或[SQLITE_OMIT_TRIGGER](https://www.sqlite.org/compile.html#omit_trigger)定义）。
+
+无法在[多语句事务](https://www.sqlite.org/lang_transaction.html)中启用或禁用外键约束（当SQLite不在[自动提交模式](https://www.sqlite.org/c3ref/get_autocommit.html)时）。试图这样做不会返回错误; 它根本没有效果。
+
+### 1.42.2、Required and Suggested Database Indexes
+
+通常，外键约束的父键是父表的主键。 如果它们不是主键，则父键列必须共同使用UNIQUE约束或具有UNIQUE索引。 如果父键列具有UNIQUE索引，则该索引必须使用CREATE TABLE语句中为父表指定的归类序列。例如，
+
+```sqlite
+CREATE TABLE parent(a PRIMARY KEY, b UNIQUE, c, d, e, f);
+CREATE UNIQUE INDEX i1 ON parent(c, d);
+CREATE INDEX i2 ON parent(e);
+CREATE UNIQUE INDEX i3 ON parent(f COLLATE nocase);
+
+CREATE TABLE child1(f, g REFERENCES parent(a));                        -- Ok
+CREATE TABLE child2(h, i REFERENCES parent(b));                        -- Ok
+CREATE TABLE child3(j, k, FOREIGN KEY(j, k) REFERENCES parent(c, d));  -- Ok
+CREATE TABLE child4(l, m REFERENCES parent(e));                        -- Error!
+CREATE TABLE child5(n, o REFERENCES parent(f));                        -- Error!
+CREATE TABLE child6(p, q, FOREIGN KEY(p, q) REFERENCES parent(b, c));  -- Error!
+CREATE TABLE child7(r REFERENCES parent(c));                           -- Error!
+```
+
+作为表*child1*，*child2*和*child3*的一部分创建的外键约束都正确。 声明为table *child4*的一部分的外键是错误的，因为即使父键列已编制索引，索引也不是UNIQUE。 table *child5*的外键是一个错误，因为即使父键列具有唯一索引，索引也会使用不同的整理顺序。 Tables *child6*和*child7*不正确，因为虽然它们的父键上都有UNIQUE索引，但这些键与单个UNIQUE索引的列不完全匹配。
+
+子键列不需要索引，但它们几乎总是有益的。 回到[第1节](https://www.sqlite.org/foreignkeys.html#fk_basics)中的示例，每次应用程序从*artist*表（父表）中删除一行时，它都会执行相同的操作用于搜索*track*表（子表）中的引用行的以下SELECT语句。
+
+```sqlite
+SELECT rowid FROM track WHERE trackartist = ?
+```
+
+`where ?`在上面的内容被替换为从*artist*表中删除的记录的*artistid*列的值（回想一下*trackartist*列是子键，*artistid*列是父键）。 或者，更一般地说：
+
+```sqlite
+SELECT rowid FROM <child-table> WHERE <child-key> = :parent_key_value
+```
+
+如果此SELECT返回任何行，则SQLite断定从父表中删除行将违反外键约束并返回错误。 如果修改了父键的内容或者将新行插入到父表中，则可以运行类似的查询。 如果这些查询无法使用索引，则会强制它们对整个子表执行线性扫描。 在*non-trivial*数据库中，这可能非常昂贵。
+
+因此，在大多数实际系统中，应在每个外键约束的子键列上创建索引。 子键索引不必是（通常也不是）UNIQUE索引。 再次回到第1节中的示例，有效实现外键约束的完整数据库模式可能是：
+
+```sqlite
+CREATE TABLE artist(
+  artistid    INTEGER PRIMARY KEY, 
+  artistname  TEXT
+);
+CREATE TABLE track(
+  trackid     INTEGER,
+  trackname   TEXT, 
+  trackartist INTEGER REFERENCES artist
+);
+CREATE INDEX trackindex ON track(trackartist);
+```
+
+如果没有显示申明*parent key*，则默认为*parent table*的主键（例子中是*artistid*）。
+
+### 1.42.3、ON DELETE and ON UPDATE Actions
+
+外键ON DELETE和ON UPDATE子句用于配置从父表中删除行（ON DELETE）或修改现有行的父键值（ON UPDATE）时发生的操作。 单个外键约束可以为ON DELETE和ON UPDATE配置不同的操作。 外键操作在很多方面类似于触发器。
+
+与SQLite数据库中的每个外键关联的ON DELETE和ON UPDATE操作是“**NO ACTION**”，“**RESTRICT**”，“**SET NULL**”，“**SET DEFAULT**”或“**CASCADE**”之一。 如果未明确指定操作，则默认为“**NO ACTION**”。
+
+- **NO ACTION**: 配置“NO ACTION”意味着：当从数据库中修改或删除父键时，不会采取任何特殊操作。
+- **RESTRICT**: “RESTRICT”操作意味着当存在映射到它的一个或多个子键时，禁止应用程序删除（对于ON DELETE RESTRICT）或修改（对于ON UPDATE RESTRICT）父键。 RESTRICT操作和正常外键约束强制执行的效果之间的区别在于RESTRICT操作处理在字段更新后立即发生 - 不是在当前语句的末尾，因为它会立即约束，或者在结束时与延迟约束一样的当前事务。 即使附加的外键约束被延迟，配置RESTRICT操作也会导致SQLite在删除或修改具有从属子键的父键时立即返回错误。
+- **SET NULL**: 如果配置的操作是“SET NULL”，那么当删除父键（对于ON DELETE SET NULL）或修改（对于ON UPDATE SET NULL）时，子表中映射到父表的所有行的子键列 key设置为NULL值。
+- **SET DEFAULT**: “SET DEFAULT”操作类似于“SET NULL”，除了每个子键列都设置为包含列默认值而不是NULL。 有关如何为表列分配默认值的详细信息，请参阅[CREATE TABLE](https://www.sqlite.org/lang_createtable.html)文档。
+- **CASCADE**: “CASCADE”操作将父键上的删除或更新操作传播到每个从属子键。 对于“ON DELETE CASCADE”操作，这意味着子表中与已删除的父行关联的每一行也将被删除。 对于“ON UPDATE CASCADE”动作，这意味着修改存储在每个从属子键中的值以匹配新的父键值。
+
+例如，如下所示向外键添加“ON UPDATE CASCADE”子句增强了第1节中的示例模式，以允许用户更新artistid（外键约束的父键）列而不破坏参照完整性：
+
+```sqlite
+-- Database schema
+CREATE TABLE artist(
+  artistid    INTEGER PRIMARY KEY, 
+  artistname  TEXT
+);
+CREATE TABLE track(
+  trackid     INTEGER,
+  trackname   TEXT, 
+  trackartist INTEGER REFERENCES artist(artistid) ON UPDATE CASCADE
+);
+
+sqlite> SELECT * FROM artist;
+artistid  artistname       
+--------  -----------------
+1         Dean Martin      
+2         Frank Sinatra    
+
+sqlite> SELECT * FROM track;
+trackid  trackname          trackartist
+-------  -----------------  -----------
+11       That's Amore       1
+12       Christmas Blues    1
+13       My Way             2  
+
+sqlite> -- Update the artistid column of the artist record for "Dean Martin".
+sqlite> -- Normally, this would raise a constraint, as it would orphan the two
+sqlite> -- dependent records in the track table. However, the ON UPDATE CASCADE clause
+sqlite> -- attached to the foreign key definition causes the update to "cascade"
+sqlite> -- to the child table, preventing the foreign key constraint violation.
+sqlite> UPDATE artist SET artistid = 100 WHERE artistname = 'Dean Martin';
+
+sqlite> SELECT * FROM artist;
+artistid  artistname       
+--------  -----------------
+2         Frank Sinatra    
+100       Dean Martin      
+
+sqlite> SELECT * FROM track;
+trackid  trackname          trackartist
+-------  -----------------  -----------
+11       That's Amore       100
+12       Christmas Blues    100  
+13       My Way             2  
+```
+
+配置ON UPDATE或ON DELETE操作并不意味着不需要满足外键约束。 例如，如果配置了“ON DELETE SET DEFAULT”操作，但父表中没有与子键列的默认值对应的行，则在存在依赖子键时删除父键仍会导致外键 违反。 例如：
+
+```sqlite
+-- Database schema
+CREATE TABLE artist(
+  artistid    INTEGER PRIMARY KEY, 
+  artistname  TEXT
+);
+CREATE TABLE track(
+  trackid     INTEGER,
+  trackname   TEXT, 
+  trackartist INTEGER DEFAULT 0 REFERENCES artist(artistid) ON DELETE SET DEFAULT
+);
+
+sqlite> SELECT * FROM artist;
+artistid  artistname       
+--------  -----------------
+3         Sammy Davis Jr.
+
+sqlite> SELECT * FROM track;
+trackid  trackname          trackartist
+-------  -----------------  -----------
+14       Mr. Bojangles      3
+
+sqlite> -- Deleting the row from the parent table causes the child key
+sqlite> -- value of the dependent row to be set to integer value 0. However, this
+sqlite> -- value does not correspond to any row in the parent table. Therefore
+sqlite> -- the foreign key constraint is violated and an is exception thrown.
+sqlite> DELETE FROM artist WHERE artistname = 'Sammy Davis Jr.';
+SQL error: foreign key constraint failed
+
+sqlite> -- This time, the value 0 does correspond to a parent table row. And
+sqlite> -- so the DELETE statement does not violate the foreign key constraint
+sqlite> -- and no exception is thrown.
+sqlite> INSERT INTO artist VALUES(0, 'Unknown Artist');
+sqlite> DELETE FROM artist WHERE artistname = 'Sammy Davis Jr.';
+
+sqlite> SELECT * FROM artist;
+artistid  artistname       
+--------  -----------------
+0         Unknown Artist
+
+sqlite> SELECT * FROM track;
+trackid  trackname          trackartist
+-------  -----------------  -----------
+14       Mr. Bojangles      0
+```
+
+那些熟悉[SQLite触发器](https://www.sqlite.org/lang_createtrigger.html)的人会注意到上面例子中演示的“ON DELETE SET DEFAULT”操作与下面的AFTER DELETE触发器类似：
+
+```sqlite
+CREATE TRIGGER on_delete_set_default AFTER DELETE ON artist BEGIN
+  UPDATE child SET trackartist = 0 WHERE trackartist = old.artistid;
+END;
+```
+
+每当删除外键约束的父表中的行时，或者修改存储在父键列中的值时，事件的逻辑顺序为：
+
+1. 执行适用的BEFORE trigger，
+2. 检查本地（非外键）约束，
+3. 更新或删除父表中的行，
+4. 执行任何所需的外键操作，
+5. 执行适用的AFTER trigger。
+
+ON UPDATE外键操作和SQL触发器之间存在一个重要区别。 仅当修改了父键的值以使新的父键值不等于旧值时，才会执行ON UPDATE操作。 例如：
+
+```sqlite
+-- Database schema
+CREATE TABLE parent(x PRIMARY KEY);
+CREATE TABLE child(y REFERENCES parent ON UPDATE SET NULL);
+
+sqlite> SELECT * FROM parent;
+x
+----
+key
+
+sqlite> SELECT * FROM child;
+y
+----
+key
+
+sqlite> -- Since the following UPDATE statement does not actually modify
+sqlite> -- the parent key value, the ON UPDATE action is not performed and
+sqlite> -- the child key value is not set to NULL.
+sqlite> UPDATE parent SET x = 'key';
+sqlite> SELECT IFNULL(y, 'null') FROM child;
+y
+----
+key
+
+sqlite> -- This time, since the UPDATE statement does modify the parent key
+sqlite> -- value, the ON UPDATE action is performed and the child key is set
+sqlite> -- to NULL.
+sqlite> UPDATE parent SET x = 'key2';
+sqlite> SELECT IFNULL(y, 'null') FROM child;
+y
+----
+null
+```
 
 
 
