@@ -1,3 +1,5 @@
+
+
 # Oppo短信项目总结
 
 | 版本 | 修订人 | 日期 | 描述 |
@@ -36,8 +38,6 @@ Ctrl + Shift + F7，在文件中高亮显示某个字符串，F3或Shift+F3可�
 
 #### 1.1.3、编辑视窗快捷功能
 
-F2，定位编译错误的位置
-
 Ctrl + W，选中代码块，多次按会扩大范围
 
 Ctrl + D，快速复制行
@@ -52,11 +52,9 @@ Alt + Enter，快速修复错误
 
 #### 1.1.4、窗口&面板
 
-Ctrl + Shift + F12，快速最大化代码编辑窗口
+Ctrl + Shift + F12，快速调整代码编辑窗口的大小
 
 Shift + Esc，关闭当前打开的面板
-
-Shift + Click，关闭窗口
 
 
 
@@ -230,9 +228,8 @@ PullToRefreshListView的状态图如下所示：
 ```java
 // ComposeMessageActivity.mHasMoreMessage
 // OnQueryComplete()回调中改写，请求的数量等于Cusor返回的数量，则认为有更多消息
-mHasMoreMessage = mMsgListAdapter.getCount() < mDisplayMessageCount;
+mHasMoreMessage=(mMsgListAdapter.getCount()==mDisplayMessageCount);
 // ComposeMessageActivity.onScrollItemAfterItemListener.onScroll()中使用，设置firstItemIndex
-// firstItemIndex对于判断是否到顶后的下拉事件非常关键!!!
 if (mHasMoreMessage && !mIsSearchMessage) {
 	mMsgListView.setFirstItemIndex(firstVisibleItem);
 }
@@ -994,14 +991,13 @@ ShopEntry shopEntry = PushMessageSQLiteHelper.getInstance(ctx).queryShopEntry(mS
 
     
 
-### 3.2、修改思路
+### 3.2、分段加载修改思路
 
 #### 3.2.1、数据获取
 
 ```java
-PushMessageManager#getMessagesByServiceId()
+public void getMessagesByServiceId(String serviceId, String where, boolean isBlocked, OnPmmsReceivedListener listener);
 // 给此函数增加带有数量限制的参数的重载
-此函数有两种调用路径：1、正常查询不带参数；2、查询未读消息，用来标记已读状态
 -----------------------------------------------------------------
 透传给GetPmmsByServiceId对象
 [OK!仅此一次路径调用]
@@ -1020,21 +1016,123 @@ PushMessageManager#getMessagesByServiceId()
 
 ```
 
-#### 3.2.2、界面调整
+
+
+#### 3.2.2、Activity启动依赖路径
 
 ```java
-PushMessageListActivity增加成员变量mDisplayCount，表示当前最多取多少条
-
------------------------------------------------------------------
-PushMessageListActivity增加成员变量mDisplayCount，表示是否还有更多消息
-PushMessageListActivity#refreshListView()的取数据回调中，记录到mHasMoreMessage
-
------------------------------------------------------------------
-ComposeMessageActivity中的复杂滚动刷新逻辑，原界面中并未实现
-
+com.oppo.mms.Shortcuts.ShortcutsInfo#addPushShortcutInfo();
+......;
+Intent intent = new Intent(Intent.ACTION_VIEW);
+intent.setClass(context, PushMessageListActivity.class);
+intent.putExtra(THREAD_ID, threadId);
+intent.putExtra(SERVICE_ID, shopId);
+intent.putExtra(NUMBER, phone);
+intent.putExtra(OppoMmsConstant.IS_PUSH_MESSAGE, true);
+intent.putExtra(SHORTCUT_TYPE, PUSH_MESSAGE);
+intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+......;
 ```
 
+桌面长按短信应用图标，弹出菜单选择快捷应用，比如“美团”
 
+此时，可以采用分页加载
+
+```java
+com.ted.push.PushMessageListActivity#createIntent();
+public static Intent createIntent(Context context, String serviceId, String number, String backDescription, long threadId) {
+    Intent intent = new Intent(context, PushMessageListActivity.class);
+    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    intent.putExtra(NUMBER, number);
+    intent.putExtra(NavigateUtils.NAVIGATE_UP_TITLE_TEXT, backDescription);
+    intent.putExtra(SERVICE_ID, serviceId);
+    intent.putExtra(THREAD_ID, threadId);
+    intent.putExtra(OppoMmsConstant.IS_PUSH_MESSAGE, true);
+
+    if (threadId > 0) {
+        intent.setData(Conversation.getUri(threadId));
+    }
+
+    return intent;
+}
+```
+
+Intent构造模板函数，一共有N处调用：
+
+1. com.oppo.mms.activity.ColorSearchSpecificActivity#openPushThread()
+
+   ```java
+   Intent intent = PushMessageListActivity.createIntent(this, serviceId, number, backDescription, threadId);
+   intent.putExtra(PushMessageListActivity.THREAD_TYPE, oppoThreadType);
+   intent.putExtra("select_id", rowId);
+   ```
+
+   搜索结果页跳转，加载到对应的select_id的消息，并滚动到对应的位置
+
+   不能采用分页加载
+
+2. com.android.mms.ui.ConversationList#openPushThread()
+
+   ```java
+   Intent intent = PushMessageListActivity.createIntent(this, serviceId, number, backDescription, threadId);
+   intent.putExtra(PushMessageListActivity.THREAD_TYPE, oppoThreadType);
+   intent.putExtra(PushMessageListActivity.IS_BLOCKED, isBlockThreads()/*false*/);
+   intent.putExtra("select_id", rowId);
+   ```
+
+   
+
+3. com.oppo.mms.activity.GlobalSearchActivity#openPushThread()
+
+   ```java
+   if (type == TedUtils.OPPO_PUSH_MSG_TYPE) {
+       String backDescription = getString((oppoThreadType == 0) ? R.string.app_label : R.string.push_folder_name);
+       Intent intent = PushMessageListActivity.createIntent(this, serviceId, number, backDescription, threadId);
+       intent.putExtra(PushMessageListActivity.THREAD_TYPE, oppoThreadType);
+       intent.putExtra("select_id", rowId);
+   }
+   ```
+
+   负一屏全局搜索结果跳转，加载到对应的select_id的消息，并滚动到对应的位置
+
+4. com.ted.push.libpush.util.NotificationUtil#getNewMessageNotificationInfo()
+
+   ```java
+   Intent clickIntent = PushMessageListActivity.createIntent(context, serviceId, address, backDescription, threadId);
+   ```
+
+   收到新消息，从通知栏点击进入列表界面
+
+   可以采用分页加载
+
+5. com.oppo.mms.activity.OppoCollectedMessageActivity#openPushThread()
+
+   ```java
+   Intent intent = PushMessageListActivity.createIntent(this, serviceId, number, null, threadId);
+   intent = OppoMmsUtils.getLabelIntent(this, intent, R.string.oppo_my_collection);
+   intent.putExtra("select_id", messageId);
+   ```
+
+   被收藏的消息点击后跳转
+
+6. com.oppo.mms.activity.OppoUnReadMessageDialogActivity#openThread()
+
+   ```java
+   if ("push".equals(cursor.getString(COLUMN_MSG_TYPE))) {
+       String backDes = getString((cursor.getInt(COLUMN_MMS_MESSAGE_TYPE) == 0) ? R.string.app_label : R.string.service_message);
+       clickIntent = PushMessageListActivity.createIntent(
+           this, cursor.getString(COLUMN_SMS_BUBBLE),              
+           cursor.getString(COLUMN_SMS_ADDRESS), backDes, threadId);
+   } else {
+       clickIntent = ComposeMessageActivity.createIntent(this, threadId);
+   }
+   clickIntent.putExtra(OppoMmsConstant.ANIMATION_FROM_CENTER, true);
+   clickIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                   | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+   clickIntent = OppoMmsUtils.getLabelIntent(this, clickIntent, R.string.app_label);
+   ```
+
+   桌面长按短信图标，点击未读消息，会列出所有的未读消息，点击后跳转
 
 
 
