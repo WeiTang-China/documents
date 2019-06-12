@@ -109,6 +109,11 @@ shell终端下不能gitk，完全需要用log来查看，新增一个或几个al
 
 
 
+## 2.4、解决gitk中文乱码问题
+
+```shell
+git config --global --add gui.encoding utf-8
+```
 
 
 
@@ -121,3 +126,15 @@ shell终端下不能gitk，完全需要用log来查看，新增一个或几个al
 
 
 
+
+
+
+
+
+
+
+
+
+# References
+
+- [官方网站](https://git-scm.com/)
