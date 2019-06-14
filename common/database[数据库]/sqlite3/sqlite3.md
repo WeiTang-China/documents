@@ -4019,6 +4019,24 @@ null
 
 # 2、使用技巧
 
+## 2.1、[数据库重构神器：一个给可以支持sqlite数据库直接生成er图的在线网站](https://www.jianshu.com/p/c674c7ff1422)
+
+ https://vertabelo.com
+
+使用方法如下：
+
+**1**.选择SQLite3.7.X
+
+**2**.选择FROM SQL 
+
+**3**.然后导入sql文件（备注：需要把sqlite数据库导出为sql文件上传）
+
+![](files\vertabelo_create.jpg)
+
+![](files\vertabelo_result.jpg)
+
+
+
 
 
 
