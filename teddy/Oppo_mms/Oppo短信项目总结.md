@@ -1,6 +1,6 @@
 
 
-# Oppo短信项目总结
+# 短信项目总结
 
 | 版本 | 修订人 | 日期 | 描述 |
 | :-: | :-: | :-: | :------- |
@@ -442,7 +442,7 @@ private int smoothScrollToEnd(boolean force, int listSizeChange) {
         mMsgListView.setSelectionFromTop(lastItemInList, -20000);
     }
     else if (mIsPullListViewLoadMoreMessage) {
-        mMsgListView.setSelectionFromTop(mLastLoadMessageCount + 1, (int) getResources().getDimension(R.dimen.oppo_refresh_message_top_item_position));
+        mMsgListView.setSelectionFromTop(mLastLoadMessageCount + 1, (int) getResources().getDimension(R.dimen.****_refresh_message_top_item_position));
     }
     mIsPullListViewLoadMoreMessage = false;
     return 1;
@@ -706,7 +706,7 @@ ShopEntry shopEntry = PushMessageSQLiteHelper.getInstance(ctx).queryShopEntry(mS
    // 对数据完整性有依赖，如果只返回部分数据，会影响逻辑！
    // 搜索通过遍历整个list完成，效率比较低，需要重构
    
-           if (SettingsHolder.isOppoPushEnable(context)) {
+           if (SettingsHolder.is!***PushEnable(context)) {
                // ......
                // 从list中过滤掉MSG_TYPE_SMS_OUT消息，添加到arrayList
                mMsgListAdapter.setReceivePmmsEntryList(arrayList);
@@ -715,7 +715,7 @@ ShopEntry shopEntry = PushMessageSQLiteHelper.getInstance(ctx).queryShopEntry(mS
    // 维护mReceivePmmsEntryList的意义在于：
    // PushMessageListActivity.sendMessage()方法中
    // isTeddyPush = "teddy".equals(mShopEntry.getShopSource())
-   // if (SettingsHolder.isOppoPushEnable(this) && !isTeddyPush) {
+   // if (SettingsHolder.is!***PushEnable(this) && !isTeddyPush) {
    //     doSomething......
    // }
            mMsgListAdapter.clear();
@@ -798,7 +798,7 @@ ShopEntry shopEntry = PushMessageSQLiteHelper.getInstance(ctx).queryShopEntry(mS
    // 可以修改为部分加载，因为取的相对位置
    // 但是，此时与加载更多冲突了，需要研究一下解决冲突的办法，待定
    //   1. 禁止加载更多
-   //   2. 加载更多后，更新OppoEditableListView.EditableListData.mIdPositionMap，或者粗暴一点，清除所有的checked状态
+   //   2. 加载更多后，更新!***EditableListView.EditableListData.mIdPositionMap，或者粗暴一点，清除所有的checked状态
    ```
 
 5. `ModeCallback.updateMenu(int checkedCount)` - **4** references in inner-class `ModeCallback`
@@ -823,7 +823,7 @@ ShopEntry shopEntry = PushMessageSQLiteHelper.getInstance(ctx).queryShopEntry(mS
 
    
 
-6. `ModeCallback.onActionItemClicked(final ActionMode mode, MenuItem item)` - **1** reference in `OppoEditableListView.EditModeWrapper.onActionItemClicked(ActionMode, MenuItem)`
+6. `ModeCallback.onActionItemClicked(final ActionMode mode, MenuItem item)` - **1** reference in `!***EditableListView.EditModeWrapper.onActionItemClicked(ActionMode, MenuItem)`
 
    ```java
    switch(item.getItemId()) {
@@ -839,7 +839,7 @@ ShopEntry shopEntry = PushMessageSQLiteHelper.getInstance(ctx).queryShopEntry(mS
 
    
 
-7. `ModeCallback.onCreateActionMode(ActionMode mode, Menu menu)` - **1** reference in `OppoEditableListView.EditModeWrapper.onCreateActionMode(ActionMode, Menu)`
+7. `ModeCallback.onCreateActionMode(ActionMode mode, Menu menu)` - **1** reference in `!***EditableListView.EditModeWrapper.onCreateActionMode(ActionMode, Menu)`
 
    ```java
    ......;
@@ -849,7 +849,7 @@ ShopEntry shopEntry = PushMessageSQLiteHelper.getInstance(ctx).queryShopEntry(mS
 
    
 
-8. `ModeCallback.onDestroyActionMode(ActionMode arg0)` - **1** reference in `OppoEditableListView.EditModeWrapper.onDestroyActionMode(ActionMode)`
+8. `ModeCallback.onDestroyActionMode(ActionMode arg0)` - **1** reference in `!***EditableListView.EditModeWrapper.onDestroyActionMode(ActionMode)`
 
    ```java
    mMsgListAdapter.exitCheckMode();
@@ -858,7 +858,7 @@ ShopEntry shopEntry = PushMessageSQLiteHelper.getInstance(ctx).queryShopEntry(mS
 
    
 
-9. `ModeCallback.onCheckStateChanged(OppoEditableListView.EditableListViewCheckable editableListViewCheckable)` - **1** reference in `OppoEditableListView.EditModeWrapper.onCheckStateChanged(OppoEditableListView.EditableListViewCheckable)`
+9. `ModeCallback.onCheckStateChanged(!***EditableListView.EditableListViewCheckable editableListViewCheckable)` - **1** reference in `!***EditableListView.EditModeWrapper.onCheckStateChanged(!***EditableListView.EditableListViewCheckable)`
 
    ```java
    mMsgListAdapter.setCheckedItem(mCheckable.getCheckedItemInIds());
@@ -867,7 +867,7 @@ ShopEntry shopEntry = PushMessageSQLiteHelper.getInstance(ctx).queryShopEntry(mS
 
    
 
-10. `ModeCallback.onVisibleViewCheckStateChanged(View view, boolean isChecked)` - **1** reference in `OppoEditableListView.EditModeWrapper.onVisibleViewCheckStateChanged(View, boolean)`
+10. `ModeCallback.onVisibleViewCheckStateChanged(View view, boolean isChecked)` - **1** reference in `!***EditableListView.EditModeWrapper.onVisibleViewCheckStateChanged(View, boolean)`
 
     ```java
     if (view != null) {
@@ -1021,14 +1021,14 @@ public void getMessagesByServiceId(String serviceId, String where, boolean isBlo
 #### 3.2.2、Activity启动依赖路径
 
 ```java
-com.oppo.mms.Shortcuts.ShortcutsInfo#addPushShortcutInfo();
+com.****.mms.Shortcuts.ShortcutsInfo#addPushShortcutInfo();
 ......;
 Intent intent = new Intent(Intent.ACTION_VIEW);
 intent.setClass(context, PushMessageListActivity.class);
 intent.putExtra(THREAD_ID, threadId);
 intent.putExtra(SERVICE_ID, shopId);
 intent.putExtra(NUMBER, phone);
-intent.putExtra(OppoMmsConstant.IS_PUSH_MESSAGE, true);
+intent.putExtra(!***MmsConstant.IS_PUSH_MESSAGE, true);
 intent.putExtra(SHORTCUT_TYPE, PUSH_MESSAGE);
 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 ......;
@@ -1047,7 +1047,7 @@ public static Intent createIntent(Context context, String serviceId, String numb
     intent.putExtra(NavigateUtils.NAVIGATE_UP_TITLE_TEXT, backDescription);
     intent.putExtra(SERVICE_ID, serviceId);
     intent.putExtra(THREAD_ID, threadId);
-    intent.putExtra(OppoMmsConstant.IS_PUSH_MESSAGE, true);
+    intent.putExtra(!***MmsConstant.IS_PUSH_MESSAGE, true);
 
     if (threadId > 0) {
         intent.setData(Conversation.getUri(threadId));
@@ -1059,11 +1059,11 @@ public static Intent createIntent(Context context, String serviceId, String numb
 
 Intent构造模板函数，一共有N处调用：
 
-1. com.oppo.mms.activity.ColorSearchSpecificActivity#openPushThread()
+1. com.****.mms.activity.ColorSearchSpecificActivity#openPushThread()
 
    ```java
    Intent intent = PushMessageListActivity.createIntent(this, serviceId, number, backDescription, threadId);
-   intent.putExtra(PushMessageListActivity.THREAD_TYPE, oppoThreadType);
+   intent.putExtra(PushMessageListActivity.THREAD_TYPE, ****ThreadType);
    intent.putExtra("select_id", rowId);
    ```
 
@@ -1075,20 +1075,20 @@ Intent构造模板函数，一共有N处调用：
 
    ```java
    Intent intent = PushMessageListActivity.createIntent(this, serviceId, number, backDescription, threadId);
-   intent.putExtra(PushMessageListActivity.THREAD_TYPE, oppoThreadType);
+   intent.putExtra(PushMessageListActivity.THREAD_TYPE, ****ThreadType);
    intent.putExtra(PushMessageListActivity.IS_BLOCKED, isBlockThreads()/*false*/);
    intent.putExtra("select_id", rowId);
    ```
 
    
 
-3. com.oppo.mms.activity.GlobalSearchActivity#openPushThread()
+3. com.****.mms.activity.GlobalSearchActivity#openPushThread()
 
    ```java
-   if (type == TedUtils.OPPO_PUSH_MSG_TYPE) {
-       String backDescription = getString((oppoThreadType == 0) ? R.string.app_label : R.string.push_folder_name);
+   if (type == TedUtils.!!!!_PUSH_MSG_TYPE) {
+       String backDescription = getString((****ThreadType == 0) ? R.string.app_label : R.string.push_folder_name);
        Intent intent = PushMessageListActivity.createIntent(this, serviceId, number, backDescription, threadId);
-       intent.putExtra(PushMessageListActivity.THREAD_TYPE, oppoThreadType);
+       intent.putExtra(PushMessageListActivity.THREAD_TYPE, ****ThreadType);
        intent.putExtra("select_id", rowId);
    }
    ```
@@ -1105,17 +1105,17 @@ Intent构造模板函数，一共有N处调用：
 
    可以采用分页加载
 
-5. com.oppo.mms.activity.OppoCollectedMessageActivity#openPushThread()
+5. com.****.mms.activity.!***CollectedMessageActivity#openPushThread()
 
    ```java
    Intent intent = PushMessageListActivity.createIntent(this, serviceId, number, null, threadId);
-   intent = OppoMmsUtils.getLabelIntent(this, intent, R.string.oppo_my_collection);
+   intent = !***MmsUtils.getLabelIntent(this, intent, R.string.****_my_collection);
    intent.putExtra("select_id", messageId);
    ```
 
    被收藏的消息点击后跳转
 
-6. com.oppo.mms.activity.OppoUnReadMessageDialogActivity#openThread()
+6. com.****.mms.activity.!***UnReadMessageDialogActivity#openThread()
 
    ```java
    if ("push".equals(cursor.getString(COLUMN_MSG_TYPE))) {
@@ -1126,10 +1126,10 @@ Intent构造模板函数，一共有N处调用：
    } else {
        clickIntent = ComposeMessageActivity.createIntent(this, threadId);
    }
-   clickIntent.putExtra(OppoMmsConstant.ANIMATION_FROM_CENTER, true);
+   clickIntent.putExtra(!***MmsConstant.ANIMATION_FROM_CENTER, true);
    clickIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                    | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-   clickIntent = OppoMmsUtils.getLabelIntent(this, clickIntent, R.string.app_label);
+   clickIntent = !***MmsUtils.getLabelIntent(this, clickIntent, R.string.app_label);
    ```
 
    桌面长按短信图标，点击未读消息，会列出所有的未读消息，点击后跳转
