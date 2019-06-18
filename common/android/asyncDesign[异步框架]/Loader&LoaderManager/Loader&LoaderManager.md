@@ -378,9 +378,13 @@ initLoader时传入的id作为外部唯一标识
 
 
 
+# 3、使用技巧
 
+## 3.1、通过dump指令查看当前Loader状态
 
+adb shell dumpsys activity %包名%
 
+![](files\dumpsys_activity.png)
 
 
 
