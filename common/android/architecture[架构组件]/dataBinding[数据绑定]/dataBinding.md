@@ -588,7 +588,7 @@ user.add(17);
 
 实现[`Observable`](https://developer.android.com/reference/androidx/databinding/Observable.html)接口的类可以注册listener，当属性被更改时会得到通知。
 
-[`Observable`](https://developer.android.com/reference/androidx/databinding/Observable.html)有添加和删除侦听器的方法，但您必须决定何时发送通知。 为了简化开发，data-binding库提供了[`BaseObservable`](https://developer.android.com/reference/androidx/databinding/BaseObservable.html)类（它是`Observable`的子类），实现了侦听器注册机制。 实现`BaseObservable`的数据类负责通知属性何时发生变化。 通过为`getter`分配[`Bindable`](https://developer.android.com/reference/androidx/databinding/Bindable.html)注解和在`setter`中调用[`notifyPropertyChanged()`](https://developer.android.com/reference/androidx/databinding/BaseObservable.html#notifyPropertyChanged(int))方法来实现，如下例所示：
+[`Observable`](https://developer.android.com/reference/androidx/databinding/Observable.html)有添加和删除listener的方法，但您必须决定何时发送通知。 为了简化开发，data-binding库提供了[`BaseObservable`](https://developer.android.com/reference/androidx/databinding/BaseObservable.html)类（它是`Observable`的子类），默认实现了listener注册机制。 实现`BaseObservable`的数据类负责通知属性何时发生变化。 通过为`getter`分配[`Bindable`](https://developer.android.com/reference/androidx/databinding/Bindable.html)注解和在`setter`中调用[`notifyPropertyChanged()`](https://developer.android.com/reference/androidx/databinding/BaseObservable.html#notifyPropertyChanged(int))方法来实现，如下例所示：
 
 ```java
 private static class User extends BaseObservable {
@@ -617,21 +617,21 @@ private static class User extends BaseObservable {
 }
 ```
 
-data-binding生成一个名为`BR`的类，该类包含用于data-binding的资源的ID。 [`Bindable`](https://developer.android.com/reference/androidx/databinding/Bindable.html)注解在编译期间在`BR`类文件中生成一个条目。如果无法更改数据类的基类，则可以implement[`Observable`](https://developer.android.com/reference/androidx/databinding/Observable.html)接口，并使用[`PropertyChangeRegistry`]（(https://developer.android.com/reference/androidx/databinding/PropertyChangeRegistry.html)来实现注册和通知listener。（参考一下[`BaseObservable`](https://developer.android.com/reference/androidx/databinding/BaseObservable.html)类的实现）
+data-binding生成一个名为`BR`的类，该类包含用于data-binding的资源的ID。 [`Bindable`](https://developer.android.com/reference/androidx/databinding/Bindable.html)注解在编译期间在`BR`类文件中生成一个条目。如果无法更改数据类的基类，则可以implement [`Observable`](https://developer.android.com/reference/androidx/databinding/Observable.html)接口，并使用[`PropertyChangeRegistry`]（(https://developer.android.com/reference/androidx/databinding/PropertyChangeRegistry.html)来实现注册和通知listener。（参考一下[`BaseObservable`](https://developer.android.com/reference/androidx/databinding/BaseObservable.html)类的实现）
 
 
 
 ## 1.4、Generated binding classes
 
-data-binding库将会生成用于访问布局的变量和视图的binding类。 本章节介绍如何创建和自定义生成的binding类。
+data-binding库将会生成用于访问layout的变量和View的binding class。 本章节介绍如何创建和自定义生成的binding class。
 
-生成的binding类将布局变量与布局中的视图链接起来。binding类的名称和包可以[自定义](https://developer.android.com/topic/libraries/data-binding/generated-binding#custom_binding_class_names)。所有生成的binding类都继承自[`ViewDataBinding`](https://developer.android.com/reference/androidx/databinding/ViewDataBinding.html)类。
+生成的binding class将layout变量与layout中的View链接起来。binding class的名称和包可以[自定义](#1.4.8、Custom binding class names)。所有生成的binding class都继承自[`ViewDataBinding`](https://developer.android.com/reference/androidx/databinding/ViewDataBinding.html)类。
 
-binding类从每个布局文件生成而来。 默认情况下，binding类的名称基于布局文件的名称，并将布局文件的名称转换为Pascal大小写并向其添加*Binding*后缀。上面例子中的布局文件名是`active_main.xml`，所以相应生成的binding类是`ActivityMainBinding`。 此类包含布局属性（例如，`user`变量）到布局视图的所有绑定，并知道如何为binding表达式赋值。
+binding class从每个layout文件生成而来。 默认情况下，binding class的名称基于layout文件的名称，并将layout文件的名称转换为Pascal大小写并向其添加*Binding*后缀。上面例子中的layout文件名是`active_main.xml`，所以相应生成的binding class类名是`ActivityMainBinding`。 此类包含layout属性（例如，`user`变量）到layout View的所有绑定，并知道如何为binding expression赋值。
 
 ### 1.4.1、Create a binding object
 
-在inflate layout之后应该马上创建binding类的实例，以确保它在绑定给那些带有表达式的视图之前，视图层次结构不会被修改。最常用的绑定方法是使用binding类上的static方法。你可以使用`inflate()`方法来inflate视图并且绑定它，如下所示：
+在inflate layout之后应该马上创建binding class的实例，以确保它在绑定给那些带有expression的View之前，视图层次结构不会被修改。最常用的绑定方法是使用binding class上的static方法。你可以使用`inflate()`方法来inflate View并且绑定它，如下所示：
 
 ```java
 @Override
@@ -660,7 +660,7 @@ View viewRoot = LayoutInflater.from(this).inflate(layoutId, parent, attachToPare
 ViewDataBinding binding = DataBindingUtil.bind(viewRoot);
 ```
 
-如果你在`Fragment`，`ListView`或`RecyclerView`的Adapter中使用data-binding项，使用binding类的或者[`DataBindingUtil`](https://developer.android.com/reference/androidx/databinding/DataBindingUtil)类的[`inflate()`](https://developer.android.com/reference/androidx/databinding/DataBindingUtil.html#inflate(android.view.LayoutInflater, int, android.view.ViewGroup, boolean, android.databinding.DataBindingComponent))方法将会更合适，如下所示：
+如果你在`Fragment`，`ListView`或`RecyclerView`的Adapter中使用data-binding项，使用binding class的或者[`DataBindingUtil`](https://developer.android.com/reference/androidx/databinding/DataBindingUtil)类的[`inflate()`](https://developer.android.com/reference/androidx/databinding/DataBindingUtil.html#inflate(android.view.LayoutInflater, int, android.view.ViewGroup, boolean, android.databinding.DataBindingComponent))方法将会更合适，如下所示：
 
 ```java
 ListItemBinding binding = ListItemBinding.inflate(layoutInflater, viewGroup, false);
@@ -668,11 +668,9 @@ ListItemBinding binding = ListItemBinding.inflate(layoutInflater, viewGroup, fal
 ListItemBinding binding = DataBindingUtil.inflate(layoutInflater, R.layout.list_item, viewGroup, false);
 ```
 
-
-
 ### 1.4.2、Views with IDs
 
-data-binding库在binding类中为每个layout中具有ID的View创建了`final`字段。 例如，data-binding库为如下layout创建`TextView`类型的`firstName`和`lastName`字段：
+data-binding库在binding class中为每个layout中具有ID的View创建了`final`字段。 例如，data-binding库为如下layout创建`TextView`类型的`firstName`和`lastName`字段：
 
 ```xml
 <layout xmlns:android="http://schemas.android.com/apk/res/android">
@@ -695,9 +693,9 @@ data-binding库在binding类中为每个layout中具有ID的View创建了`final`
 </layout>
 ```
 
-data-binding库在一次传递中从视图层次结构中提取所有的有ID视图。 这比为布局中的每个视图调用`findViewById()`方法更快。
+data-binding库在一次传递中从视图层次结构中提取所有的有ID视图。 这比为layout中的每个View调用`findViewById()`方法更快。
 
-虽然那些没有数据绑定视图的ID值不是必需的，但仍有一些情况需要从代码访问这些视图。
+虽然那些没有数据绑定View的ID值不是必需的，但仍有一些情况需要从代码访问这些View。
 
 ### 1.4.3、Variables
 
@@ -712,15 +710,13 @@ data-binding库为layout中声明的每个变量生成getter和setter方法。 �
 </data>
 ```
 
-
-
 ### 1.4.4、ViewStubs
 
-与普通视图不同，`ViewStub`对象开始时是一个不可见的视图。 当它们被显示或被明确告知需要inflate时，它们会通过inflate另一个布局来替换自己。
+与普通View不同，`ViewStub`对象开始时是一个不可见的View。 当它们被显示或被明确告知需要inflate时，它们会通过inflate另一个layout来替换自己。
 
-因为`ViewStub`最终将从视图层次结构中消失，所以binding类的实例中的视图也必须消失来完成内存gc。 因为binding类中的View是final的，所以[`ViewStubProxy`](https://developer.android.com/reference/androidx/databinding/ViewStubProxy.html)对象取代了生成的binding类中的`ViewStub`，可以访问`ViewStub`本身，并且当`ViewStub`被inflate后也可以访问inflate的视图层次结构。
+因为`ViewStub`最终将从视图层次结构中消失，所以binding类的实例中的View也必须消失来完成内存gc。 因为binding类中的View是final的，所以[`ViewStubProxy`](https://developer.android.com/reference/androidx/databinding/ViewStubProxy.html)对象取代了生成的binding类中的`ViewStub`，可以访问`ViewStub`本身，并且当`ViewStub`被inflate后也可以访问inflate的视图层次结构。
 
-在inflate另一个layout时，必须为新layout建立绑定。 因此，`ViewStubProxy`必须侦听`ViewStub``OnInflateListener`并在需要时建立绑定。 由于`ViewStub`只能设置一个侦听器，因此`ViewStubProxy`允许在建立绑定后设置一个`OnInflateListener`。
+在inflate另一个layout时，必须为新layout建立绑定。 因此，`ViewStubProxy`必须侦听`ViewStub``OnInflateListener`并在需要时建立绑定。 由于`ViewStub`只能设置一个listener，因此`ViewStubProxy`允许在建立绑定后设置一个`OnInflateListener`。
 
 ### 1.4.5、Immediate Binding
 
@@ -886,7 +882,7 @@ public static void setPaddingLeft(View view, int oldPadding, int newPadding) {
 }
 ```
 
-事件处理程序只能与带有一个抽象方法的接口或抽象类一起使用，如下所示：
+事件处理程序只能与带有一个抽象方法的接口或抽象类一起使用（只有1个方法），如下所示：
 
 ```java
 @BindingAdapter("android:onLayoutChange")
@@ -908,7 +904,7 @@ public static void setOnLayoutChangeListener(View view, View.OnLayoutChangeListe
 <View android:onLayoutChange="@{() -> handler.layoutChanged()}"/>
 ```
 
-当侦听器具有多个方法时，必须将其拆分为多个侦听器。 例如，`View.OnAttachStateChangeListener`有两个方法：`onViewAttachedToWindow(View)`和`onViewDetachedFromWindow(View)`。该库提供了两个接口来区分它们的属性和处理程序：
+当listener具有多个方法时，必须将其拆分为多个listener。 例如，`View.OnAttachStateChangeListener`有两个方法：`onViewAttachedToWindow(View)`和`onViewDetachedFromWindow(View)`。该库提供了两个接口来区分它们的属性和处理程序：
 
 ```java
 @TargetApi(VERSION_CODES.HONEYCOMB_MR1)

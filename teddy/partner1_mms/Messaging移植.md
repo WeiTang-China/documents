@@ -97,6 +97,34 @@ ActionMonitor的状态变化，所有操作的状态变化都是从STATE_CREATED
 
 
 
+# Conversation
+
+## 如何找到一个Conversation？
+
+之前的实现：GetOrCreateConversationAction
+
+拿到participantsList之后，做sanitize处理（过滤掉重复的，过滤掉发给自己的）
+
+然后拼接recipients参数送回mmssms执行getOrCreateTheadId操作
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
