@@ -1,74 +1,71 @@
 LiveData Overview   **Part of Android Jetpack.**
 
-[`LiveData`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html) is an observable data holder class. Unlike a regular observable, LiveData is lifecycle-aware, meaning it respects the lifecycle of other app components, such as activities, fragments, or services. This awareness ensures LiveData only updates app component observers that are in an active lifecycle state.
+`LiveData`是一个可观察的数据持有者类。 与常规observable不同，LiveData是生命周期感知的，这意味着它遵守其他应用程序组件的生命周期，例如Activity，Fragment或Service。 此感知确保LiveData仅更新处于活动生命周期状态的应用程序组件观察者。
 
-**Note:** To import LiveData components into your Android project, see [Adding Components to your Project](https://developer.android.com/topic/libraries/architecture/adding-components.html#lifecycle).
+**Note:** 要将LiveData组件导入Android项目，请参阅[Adding Components to your Project](https://developer.android.com/topic/libraries/architecture/adding-components.html#lifecycle)。
 
-LiveData considers an observer, which is represented by the [`Observer`](https://developer.android.com/reference/androidx/lifecycle/Observer.html) class, to be in an active state if its lifecycle is in the [`STARTED`](https://developer.android.com/reference/androidx/lifecycle/Lifecycle.State.html#STARTED) or [`RESUMED`](https://developer.android.com/reference/androidx/lifecycle/Lifecycle.State.html#RESUMED) state. LiveData only notifies active observers about updates. Inactive observers registered to watch [`LiveData`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html) objects aren't notified about changes.
+LiveData认为观察者是由`Observer`类表示的，如果它的生命周期是在 `STARTED`或`RESUMED`状态。LiveData仅通知活动观察者有关更新的信息。 注册观察`LiveData`对象的非活动观察者不会收到有关更改的通知。
 
-You can register an observer paired with an object that implements the [`LifecycleOwner`](https://developer.android.com/reference/androidx/lifecycle/LifecycleOwner.html) interface. This relationship allows the observer to be removed when the state of the corresponding [`Lifecycle`](https://developer.android.com/reference/androidx/lifecycle/Lifecycle.html) object changes to [`DESTROYED`](https://developer.android.com/reference/androidx/lifecycle/Lifecycle.State.html#DESTROYED). This is especially useful for activities and fragments because they can safely observe [`LiveData`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html)objects and not worry about leaks—activities and fragments are instantly unsubscribed when their lifecycles are destroyed.
+您可以注册一个观察者，它与`LifecycleOwner`界面配对。这种配对关系可以删除观察者，当对应的`Lifecycle`对象的状态变为`DESTROYED`时。这对于Activity和Fragment特别有用，因为它们可以安全地观察`LiveData`对象而不用担心泄漏 - Activity和Fragment是当他们的生命周期被摧毁时立即取消订阅。
 
-For more information about how to use LiveData, see [Work with LiveData objects](https://developer.android.com/topic/libraries/architecture/livedata#work_livedata).
+有关如何使用LiveData的详细信息，请参阅[Work with LiveData objects](#Work with LiveData objects)。
 
 ## The advantages of using LiveData
 
-Using LiveData provides the following advantages:
+使用LiveData有如下好处：
 
-- **Ensures your UI matches your data state**
+- **确保UI与data状态匹配**
 
-  LiveData follows the observer pattern. LiveData notifies [`Observer`](https://developer.android.com/reference/androidx/lifecycle/Observer.html) objects when the lifecycle state changes. You can consolidate your code to update the UI in these `Observer` objects. Instead of updating the UI every time the app data changes, your observer can update the UI every time there's a change.
+  LiveData遵循观察者模式。生命周期状态更改时，LiveData会通知`Observer`对象。您可以合并代码以更新这些`Observer`对象中的UI。每次应用程序数据更改时，您的观察者都可以在每次更改时更新UI，而不是更新UI。
 
-- **No memory leaks**
+- **不会内存泄漏**
 
-  Observers are bound to [`Lifecycle`](https://developer.android.com/reference/androidx/lifecycle/Lifecycle.html) objects and clean up after themselves when their associated lifecycle is destroyed.
+  观察者必须绑定`Lifecycle`对象，并在其相关生命周期被破坏后自行清理。
 
-- **No crashes due to stopped activities**
+- **没有因停止活动而崩溃**
 
-  If the observer's lifecycle is inactive, such as in the case of an activity in the back stack, then it doesn’t receive any LiveData events.
+  如果观察者的生命周期处于非活动状态，例如Activity切换到后台堆栈中，则Activity不会再收到任何LiveData事件。
 
-- **No more manual lifecycle handling**
+- **不再需要手动生命周期处理**
 
-  UI components just observe relevant data and don’t stop or resume observation. LiveData automatically manages all of this since it’s aware of the relevant lifecycle status changes while observing.
+  UI组件只是观察相关数据，不会停止或恢复观察。LiveData自动管理所有这些，因为它在观察时感知到相关的生命周期状态变化。
 
-- **Always up to date data**
+- **始终保持最新数据**
 
-  If a lifecycle becomes inactive, it receives the latest data upon becoming active again. For example, an activity that was in the background receives the latest data right after it returns to the foreground.
+  如果生命周期变为非活动状态，它将在再次变为活动状态时接收最新数据。例如，后台Activity在返回前台后立即接收最新数据。
 
-- **Proper configuration changes**
+- **适当的配置更改**
 
-  If an activity or fragment is recreated due to a configuration change, like device rotation, it immediately receives the latest available data.
+  如果由于configuration更改（例如设备横竖屏切换）而重新创建Activity或Fragment，则会立即接收最新的可用数据。
 
-- **Sharing resources**
+- **共享资源**
 
-  You can extend a [`LiveData`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html) object using the singleton pattern to wrap system services so that they can be shared in your app. The `LiveData` object connects to the system service once, and then any observer that needs the resource can just watch the `LiveData` object. For more information, see [Extend LiveData](https://developer.android.com/topic/libraries/architecture/livedata#extend_livedata).
+  您可以使用单例模式扩展`LiveData`对象以包装系统服务，以便可以在您的应用程序中共享它们。`LiveData`对象连接到系统服务一次，然后任何需要该资源的观察者只能看到`LiveData`对象。有关更多信息，请参阅[extend_livedata](#extend_livedata)。
 
 ## Work with LiveData objects
 
-Follow these steps to work with [`LiveData`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html) objects:
+按照以下步骤使用`LiveData`对象：
 
-1. Create an instance of `LiveData` to hold a certain type of data. This is usually done within your [`ViewModel`](https://developer.android.com/reference/androidx/lifecycle/ViewModel.html)class.
+1. 创建一个“LiveData”实例来保存某种类型的数据。这通常在您的`ViewModel`类中完成。
 
-2. Create an [`Observer`](https://developer.android.com/reference/androidx/lifecycle/Observer.html) object that defines the [`onChanged()`](https://developer.android.com/reference/androidx/lifecycle/Observer.html#onChanged(T)) method, which controls what happens when the `LiveData` object's held data changes. You usually create an `Observer` object in a UI controller, such as an activity or fragment.
+2. 创建一个`Observer`对象，定义`onChanged()`方法，它控制当`LiveData`对象保持数据发生变化时会发生什么。您通常在UI控制器中创建一个“Observer”对象，例如在Activity或Fragment中。
 
-3. Attach the `Observer` object to the `LiveData` object using the [`observe()`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html#observe(android.arch.lifecycle.LifecycleOwner, android.arch.lifecycle.Observer)) method. The `observe()` method takes a [`LifecycleOwner`](https://developer.android.com/reference/androidx/lifecycle/LifecycleOwner.html) object. This subscribes the `Observer` object to the `LiveData` object so that it is notified of changes. You usually attach the `Observer` object in a UI controller, such as an activity or fragment.
+3. 使用`observe()`将`Observer`对象附加到`LiveData`对象。`observe()`方法需要一个`LifecycleOwner`对象参数，并将`Observer`对象订阅到`LiveData`对象，以便通知它变化。 您通常在UI控制器中附加`Observer`对象，例如Activity或Fragment。
 
-   **Note:** You can register an observer without an associated [`LifecycleOwner`](https://developer.android.com/reference/androidx/lifecycle/LifecycleOwner.html) object using the[`observeForever(Observer)`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html#observeForever(android.arch.lifecycle.Observer)) method. In this case, the observer is considered to be always active and is therefore always notified about modifications. You can remove these observers calling the [`removeObserver(Observer)`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html#removeObserver(android.arch.lifecycle.Observer))method.
+   **Note:** 您可以使用`observeForever(Observer)`方法注册没有关联`LifecycleOwner`对象的观察者。在这种情况下，观察者被认为始终处于活动状态，因此始终会收到有关修改的通知。您可以删除这些观察者，通过调用`removeObserver(Observer)`方法。
 
-When you update the value stored in the `LiveData` object, it triggers all registered observers as long as the attached `LifecycleOwner` is in the active state.
+当您更新存储在`LiveData`对象中的值时，只要附加的`LifecycleOwner`处于活动状态，它就会触发所有已注册的观察者。
 
-LiveData allows UI controller observers to subscribe to updates. When the data held by the `LiveData` object changes, the UI automatically updates in response.
+LiveData允许UI控制器观察者订阅更新。当`LiveData`对象保存的数据发生变化时，UI会自动更新响应。
 
 ### Create LiveData objects
 
-LiveData is a wrapper that can be used with any data, including objects that implement `Collections`, such as `List`. A [`LiveData`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html) object is usually stored within a [`ViewModel`](https://developer.android.com/reference/androidx/lifecycle/ViewModel.html) object and is accessed via a getter method, as demonstrated in the following example:
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/livedata#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/livedata#java)
+LiveData是一个可以与任何数据一起使用的包装器，包括实现`Collections`的对象，例如`List`。`LiveData`对象通常存储在`ViewModel`对象中，可通过getter方法访问，如下所示：
 
 ```java
 public class NameViewModel extends ViewModel {
-
-// Create a LiveData with a String
-private MutableLiveData<String> currentName;
+    // Create a LiveData with a String
+    private MutableLiveData<String> currentName;
 
     public MutableLiveData<String> getCurrentName() {
         if (currentName == null) {
@@ -81,26 +78,22 @@ private MutableLiveData<String> currentName;
 }
 ```
 
+初始状态，`LiveData`对象中的数据并未被设置。
 
+> **Note:** 确保存储`LiveData`对象更新`ViewModel`对象中的UI，而不是Activity或Fragment，原因：避免膨胀的Activity和Fragment。现在，这些UI控制器负责显示数据但不保持数据状态。将“LiveData”实例与特定Activity或Fragment实例分离，并允许“LiveData”对象在configuration更改后继续存在。
 
-Initially, the data in a `LiveData` object is not set.
-
-> **Note:** Make sure to store `LiveData` objects that update the UI in `ViewModel` objects, as opposed to an activity or fragment, for the following reasons:To avoid bloated activities and fragments. Now these UI controllers are responsible for displaying data but not holding data state.To decouple `LiveData` instances from specific activity or fragment instances and allow `LiveData` objects to survive configuration changes.
-
-You can read more about the benefits and usage of the `ViewModel` class in the [ViewModel guide](https://developer.android.com/topic/libraries/architecture/viewmodel.html).
+您可以在[ViewModel指南](https://developer.android.com/topic/libraries/architecture/viewmodel.html)中阅读有关`ViewModel`类的优点和用法的更多信息。
 
 ### Observe LiveData objects
 
-In most cases, an app component’s `onCreate()` method is the right place to begin observing a [`LiveData`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html) object for the following reasons:
+在大多数情况下，app组件的`onCreate()`方法是开始观察`LiveData`对象的正确位置。 原因如下：
 
-- To ensure the system doesn’t make redundant calls from an activity or fragment’s `onResume()` method.
-- To ensure that the activity or fragment has data that it can display as soon as it becomes active. As soon as an app component is in the [`STARTED`](https://developer.android.com/reference/androidx/lifecycle/Lifecycle.State.html#STARTED) state, it receives the most recent value from the `LiveData` objects it’s observing. This only occurs if the `LiveData` object to be observed has been set.
+- 确保系统不会从Activity或Fragment的`onResume()`方法进行冗余调用。
+- 确保Activity或Fragment具有可在变为活动状态时立即显示的数据。一旦应用程序组件处于`STARTED`状态，它就会收到来自`LiveData`的最新值。 只有在设置了要观察的`LiveData`对象时才会出现这种情况。
 
-Generally, LiveData delivers updates only when data changes, and only to active observers. An exception to this behavior is that observers also receive an update when they change from an inactive to an active state. Furthermore, if the observer changes from inactive to active a second time, it only receives an update if the value has changed since the last time it became active.
+通常，LiveData仅在数据更改时才提供更新，并且仅在观察者处于活动状态时提供更新。此行为的一个例外是观察者在从非活动状态更改为活动状态时也会收到更新。此外，如果观察者第二次从非活动状态变为活动状态，则只有在自上次活动状态以来该值发生更改时才会收到更新。
 
-The following sample code illustrates how to start observing a `LiveData` object:
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/livedata#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/livedata#java)
+以下示例代码说明了如何开始观察`LiveData`对象：
 
 ```java
 public class NameActivity extends AppCompatActivity {
@@ -132,17 +125,13 @@ public class NameActivity extends AppCompatActivity {
 }
 ```
 
-
-
-After [`observe()`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html#observe(android.arch.lifecycle.LifecycleOwner, android.arch.lifecycle.Observer)) is called with `nameObserver` passed as parameter, [`onChanged()`](https://developer.android.com/reference/androidx/lifecycle/Observer.html#onChanged(T)) is immediately invoked providing the most recent value stored in `mCurrentName`. If the `LiveData` object hasn't set a value in `mCurrentName`, `onChanged()` is not called.
+在调用`observe()`之后（`nameObserver`作为参数），立即调用`onChanged()`方法立即被调用，并提供存储的最新值在`mCurrentName`中。如果`LiveData`对象没有在`mCurrentName`中设置一个值，即`mCurrentName`是未设置状态，则不会调用`onChanged()`。
 
 ### Update LiveData objects
 
-LiveData has no publicly available methods to update the stored data. The [`MutableLiveData`](https://developer.android.com/reference/androidx/lifecycle/MutableLiveData.html) class exposes the[`setValue(T)`](https://developer.android.com/reference/androidx/lifecycle/MutableLiveData.html#setValue(T)) and [`postValue(T)`](https://developer.android.com/reference/androidx/lifecycle/MutableLiveData.html#postValue(T)) methods publicly and you must use these if you need to edit the value stored in a [`LiveData`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html) object. Usually `MutableLiveData` is used in the [`ViewModel`](https://developer.android.com/reference/androidx/lifecycle/ViewModel.html) and then the `ViewModel` only exposes immutable `LiveData` objects to the observers.
+LiveData没有公开的方法来更新存储的数据。`MutableLiveData`类暴露了`setValue(T)`和`postValue(T)`方法为public，因此如果您需要编辑存储在`LiveData`对象中的值，则必须使用这些。通常`MutableLiveData`用在`ViewModel`中，然后`ViewModel`只向观察者公开不可变的`LiveData`对象。
 
-After you have set up the observer relationship, you can then update the value of the `LiveData` object, as illustrated by the following example, which triggers all observers when the user taps a button:
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/livedata#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/livedata#java)
+建立观察者关系后，可以更新`LiveData`对象的值，如下所示，当用户点击按钮时触发所有观察者：
 
 ```java
 button.setOnClickListener(new OnClickListener() {
@@ -154,17 +143,15 @@ button.setOnClickListener(new OnClickListener() {
 });
 ```
 
+在示例中调用`setValue(T)`导致观察者调用他们的`onChanged()`方法并且value==“John Doe”。该示例显示按下按钮，但也可以调用`setValue()`或`postValue()`以更新`mName`，触发更新的原因可能有很多种，包括响应网络请求或数据库负载完成；不论如何，对`setValue()`或`postValue()`的调用都会触发观察者并更新UI。
 
-
-Calling `setValue(T)` in the example results in the observers calling their [`onChanged()`](https://developer.android.com/reference/androidx/lifecycle/Observer.html#onChanged(T)) methods with the value `John Doe`. The example shows a button press, but `setValue()` or `postValue()` could be called to update `mName` for a variety of reasons, including in response to a network request or a database load completing; in all cases, the call to `setValue()` or `postValue()` triggers observers and updates the UI.
-
-**Note:** You must call the [`setValue(T)`](https://developer.android.com/reference/androidx/lifecycle/MutableLiveData.html#setValue(T)) method to update the `LiveData` object from the main thread. If the code is executed in a worker thread, you can use the [`postValue(T)`](https://developer.android.com/reference/androidx/lifecycle/MutableLiveData.html#postValue(T)) method instead to update the `LiveData` object.
+**Note:** 你必须在**主线程**调用`setValue(T)`方法来更新`LiveData`对象。如果代码在工作线程中执行，则可以使用`postValue(T)`方法来更新`LiveData`对象。
 
 ### Use LiveData with Room
 
-The [Room](https://developer.android.com/training/data-storage/room/index.html) persistence library supports observable queries, which return [`LiveData`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html) objects. Observable queries are written as part of a Database Access Object (DAO).
+Room持久性库支持可观察的查询，返回`LiveData`对象。可观察查询被实现为数据库访问对象（DAO）的一部分。
 
-Room generates all the necessary code to update the `LiveData` object when a database is updated. The generated code runs the query asynchronously on a background thread when needed. This pattern is useful for keeping the data displayed in a UI in sync with the data stored in a database. You can read more about Room and DAOs in the [Room persistent library guide](https://developer.android.com/topic/libraries/architecture/room.html).
+Room会生成所有必要的代码，以便在更新数据库时更新`LiveData`对象。生成的代码在需要时在后台线程上异步运行查询。此模式对于使UI中显示的数据与存储在数据库中的数据保持同步非常有用。您可以在[Room persistent library guide](https://developer.android.com/topic/libraries/architecture/room.html)中阅读有关Room和DAO的更多信息。
 
 ### Use coroutines with LiveData
 
@@ -172,9 +159,7 @@ Room generates all the necessary code to update the `LiveData` object when a dat
 
 ## Extend LiveData
 
-LiveData considers an observer to be in an active state if the observer's lifecycle is in either the [`STARTED`](https://developer.android.com/reference/androidx/lifecycle/Lifecycle.State.html#STARTED) or [`RESUMED`](https://developer.android.com/reference/androidx/lifecycle/Lifecycle.State.html#RESUMED) states The following sample code illustrates how to extend the [`LiveData`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html) class:
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/livedata#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/livedata#java)
+如果观察者的生命周期在`STARTED`或`RESUMED`中，LiveData会认为观察者处于活动状态。以下示例代码说明了如何扩展`LiveData`类：
 
 ```java
 public class StockLiveData extends LiveData<BigDecimal> {
@@ -203,17 +188,13 @@ public class StockLiveData extends LiveData<BigDecimal> {
 }
 ```
 
+此示例中price监听器的实现包括以下重要方法：
 
+- 当`LiveData`对象具有活动观察者时，将调用`onActive()`方法。这意味着您需要从此方法开始观察price更新。
+- 当`LiveData`对象没有任何活动的观察者时，会调用`onInactive()`方法。由于没有观察者正在收听，因此没有理由保持与`StockManager`服务的连接。
+- `setValue(T)`方法更新`LiveData`实例的值并通知任何活动的观察者相关改变。
 
-The implementation of the price listener in this example includes the following important methods:
-
-- The [`onActive()`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html#onActive()) method is called when the `LiveData` object has an active observer. This means you need to start observing the stock price updates from this method.
-- The [`onInactive()`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html#onInactive()) method is called when the `LiveData` object doesn't have any active observers. Since no observers are listening, there is no reason to stay connected to the `StockManager` service.
-- The [`setValue(T)`](https://developer.android.com/reference/androidx/lifecycle/MutableLiveData.html#setValue(T)) method updates the value of the `LiveData` instance and notifies any active observers about the change.
-
-You can use the `StockLiveData` class as follows:
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/livedata#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/livedata#java)
+您可以使用`StockLiveData`类，如下所示：
 
 ```java
 public class MyFragment extends Fragment {
@@ -228,16 +209,12 @@ public class MyFragment extends Fragment {
 }
 ```
 
+`observe()`方法传递Fragment作为第一个参数，Fragment是`LifecycleOwner`的实例。这样做表示此观察者绑定到与所有者关联的`Lifecycle`对象，这意味着：
 
+- 如果`Lifecycle`对象未处于活动状态，则即使value发生更改，也不会调用观察者。
+- “Lifecycle”对象被销毁后，会自动删除观察者。
 
-The [`observe()`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html#observe(android.arch.lifecycle.LifecycleOwner, android.arch.lifecycle.Observer)) method passes the fragment, which is an instance of [`LifecycleOwner`](https://developer.android.com/reference/androidx/lifecycle/LifecycleOwner.html), as the first argument. Doing so denotes that this observer is bound to the [`Lifecycle`](https://developer.android.com/reference/androidx/lifecycle/Lifecycle.html) object associated with the owner, meaning:
-
-- If the `Lifecycle` object is not in an active state, then the observer isn't called even if the value changes.
-- After the `Lifecycle` object is destroyed, the observer is automatically removed.
-
-The fact that `LiveData` objects are lifecycle-aware means that you can share them between multiple activities, fragments, and services. To keep the example simple, you can implement the `LiveData` class as a singleton as follows:
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/livedata#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/livedata#java)
+`LiveData`对象具有生命周期感知这一事实意味着您可以在多个Activity、Fragment和Service之间共享它们。为了简化示例，您可以将`LiveData`类实现为单例，如下所示：
 
 ```java
 public class StockLiveData extends LiveData<BigDecimal> {
@@ -275,11 +252,7 @@ public class StockLiveData extends LiveData<BigDecimal> {
 }
 ```
 
-
-
-And you can use it in the fragment as follows:
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/livedata#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/livedata#java)
+您可以在Fragment中使用它，如下所示：
 
 ```java
 public class MyFragment extends Fragment {
@@ -292,19 +265,15 @@ public class MyFragment extends Fragment {
 }
 ```
 
-
-
-Multiple fragments and activities can observe the `MyPriceListener` instance. LiveData only connects to the system service if one or more of them is visible and active.
+多个Fragment和Activity可以观察到`MyPriceListener`实例。`LiveData`仅在一个或多个观察者可见且处于活动状态时才连接到系统服务。
 
 ## Transform LiveData
 
-You may want to make changes to the value stored in a [`LiveData`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html) object before dispatching it to the observers, or you may need to return a different `LiveData` instance based on the value of another one. The [`Lifecycle`](https://developer.android.com/reference/android/arch/lifecycle/package-summary.html)package provides the [`Transformations`](https://developer.android.com/reference/androidx/lifecycle/Transformations.html) class which includes helper methods that support these scenarios.
+您可能希望更改存储在`LiveData`对象中的值，然后再将其发送给观察者，或者您可能需要根据另一个实例的值返回不同的`LiveData`实例。`Lifecycle`包提供`Transformations`类，包括支持这些方案的辅助方法。
 
 - [`Transformations.map()`](https://developer.android.com/reference/androidx/lifecycle/Transformations.html#map(android.arch.lifecycle.LiveData, android.arch.core.util.Function))
 
-  Applies a function on the value stored in the `LiveData` object, and propagates the result downstream.
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/livedata#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/livedata#java)
+  对存储在`LiveData`对象中的value应用函数，并将结果传播到下游。
 
 ```java
 LiveData<User> userLiveData = ...;
@@ -313,13 +282,9 @@ LiveData<String> userName = Transformations.map(userLiveData, user -> {
 });
 ```
 
-
-
 - [`Transformations.switchMap()`](https://developer.android.com/reference/androidx/lifecycle/Transformations.html#switchMap(android.arch.lifecycle.LiveData, android.arch.core.util.Function>))
 
-  Similar to `map()`, applies a function to the value stored in the `LiveData` object and unwraps and dispatches the result downstream. The function passed to `switchMap()` must return a `LiveData` object, as illustrated by the following example:
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/livedata#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/livedata#java)
+  与`map()`类似，将函数应用于存储在`LiveData`对象中的值，并将结果解包并调度到下游。传递给`switchMap()`的函数必须返回一个`LiveData`对象，如下例所示：
 
 ```java
 private LiveData<User> getUser(String id) {
@@ -330,13 +295,9 @@ LiveData<String> userId = ...;
 LiveData<User> user = Transformations.switchMap(userId, id -> getUser(id) );
 ```
 
+您可以使用转换方法在观察者的生命周期中传递信息。除非观察者正在观察返回的“LiveData”对象，否则不会计算变换。由于转换是延迟计算的，因此生命周期相关的行为会被隐式传递下去，而不需要额外的显式调用或依赖项。
 
-
-You can use transformation methods to carry information across the observer's lifecycle. The transformations aren't calculated unless an observer is watching the returned `LiveData` object. Because the transformations are calculated lazily, lifecycle-related behavior is implicitly passed down without requiring additional explicit calls or dependencies.
-
-If you think you need a `Lifecycle` object inside a [`ViewModel`](https://developer.android.com/reference/androidx/lifecycle/ViewModel.html) object, a transformation is probably a better solution. For example, assume that you have a UI component that accepts an address and returns the postal code for that address. You can implement the naive `ViewModel` for this component as illustrated by the following sample code:
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/livedata#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/livedata#java)
+如果您认为在`ViewModel`对象中需要一个`Lifecycle`对象，那么转换可能是更好的解决方案。例如，假设您有一个接受地址的UI组件并返回该地址的邮政编码。您可以为此组件实现纯粹的`ViewModel`，如以下示例代码所示：
 
 ```java
 class MyViewModel extends ViewModel {
@@ -352,13 +313,9 @@ class MyViewModel extends ViewModel {
 }
 ```
 
+然后，UI组件需要从之前的`LiveData`对象取消注册，并在每次调用`getPostalCode()`时注册到新实例。另外，如果重新创建UI组件，它会触发另一个对`repository.getPostCode()`方法的调用，而不是使用前一个调用的结果。
 
-
-The UI component then needs to unregister from the previous `LiveData` object and register to the new instance each time it calls `getPostalCode()`. In addition, if the UI component is recreated, it triggers another call to the`repository.getPostCode()` method instead of using the previous call’s result.
-
-Instead, you can implement the postal code lookup as a transformation of the address input, as shown in the following example:
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/livedata#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/livedata#java)
+相反，您可以将邮政编码查找实现为地址输入的转换，如以下示例所示：
 
 ```java
 class MyViewModel extends ViewModel {
@@ -379,26 +336,24 @@ class MyViewModel extends ViewModel {
 }
 ```
 
+在这种情况下，`postalCode`字段被定义为`addressInput`的转换。只要您的应用程序具有与`postalCode`字段关联的活动观察器，就会在`addressInput`更改时重新计算并检索字段的值。
 
-
-In this case, the `postalCode` field is defined as a transformation of the `addressInput`. As long as your app has an active observer associated with the `postalCode` field, the field's value is recalculated and retrieved whenever`addressInput` changes.
-
-This mechanism allows lower levels of the app to create `LiveData` objects that are lazily calculated on demand. A `ViewModel` object can easily obtain references to `LiveData` objects and then define transformation rules on top of them.
+这种机制允许较低级别的应用程序创建按需延迟计算的“LiveData”对象。 `ViewModel`对象可以轻松获取对`LiveData`对象的引用，然后在它们之上定义转换规则。
 
 ### Create new transformations
 
-There are a dozen different specific transformation that may be useful in your app, but they aren’t provided by default. To implement your own transformation you can you use the [`MediatorLiveData`](https://developer.android.com/reference/androidx/lifecycle/MediatorLiveData.html) class, which listens to other [`LiveData`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html) objects and processes events emitted by them. `MediatorLiveData` correctly propagates its state to the source `LiveData` object. To learn more about this pattern, see the reference documentation of the[`Transformations`](https://developer.android.com/reference/androidx/lifecycle/Transformations.html) class.
+有十几种不同的特定转换可能对您的应用有用，但默认情况下不提供。要实现自己的转换，可以使用`MediatorLiveData`类，该类可以监听其他`LiveData`对象和处理它们发出的事件。`MediatorLiveData`正确地将其状态传播到源`LiveData`对象。要了解有关此模式的更多信息，请参阅[`Transformations`](https://developer.android.com/reference/androidx/lifecycle/Transformations.html)类的参考文档。
 
 ## Merge multiple LiveData sources
 
-[`MediatorLiveData`](https://developer.android.com/reference/androidx/lifecycle/MediatorLiveData.html) is a subclass of [`LiveData`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html) that allows you to merge multiple LiveData sources. Observers of `MediatorLiveData` objects are then triggered whenever any of the original LiveData source objects change.
+`MediatorLiveData`是`LiveData`的子类，可以用来合并多个LiveData源。只要任何原始LiveData源对象发生更改，就会触发`MediatorLiveData`对象的观察者。
 
-For example, if you have a `LiveData` object in your UI that can be updated from a local database or a network, then you can add the following sources to the `MediatorLiveData` object:
+例如，如果UI中有一个可以从本地数据库或网络更新的`LiveData`对象，则可以将以下源添加到`MediatorLiveData`对象：
 
-- A `LiveData` object associated with the data stored in the database.
-- A `LiveData` object associated with the data accessed from the network.
+- 与存储在数据库中的数据相关联的`LiveData`对象。
+- 与从网络访问的数据相关联的`LiveData`对象。
 
-Your activity only needs to observe the `MediatorLiveData` object to receive updates from both sources. For a detailed example, see the [Addendum: exposing network status](https://developer.android.com/topic/libraries/architecture/guide.html#addendum) section of the [Guide to App Architecture](https://developer.android.com/topic/libraries/architecture/guide.html).
+您的活动只需要观察`MediatorLiveData`对象以接收来自两个来源的更新。有关详细示例，请参阅[Addendum: exposing network status](https://developer.android.com/topic/libraries/architecture/guide.html#addendum) section of the [Guide to App Architecture](https://developer.android.com/topic/libraries/architecture/guide.html)。
 
 ## Additional resources
 
