@@ -53,7 +53,7 @@ SQLite是一个进程内的库，实现了自给自足的、无服务器的、�
 | 存储类  | 描述                                                         |
 | :------ | :----------------------------------------------------------- |
 | NULL    | 值是一个 NULL 值。                                           |
-| INTEGER | 值是一个带符号的整数，根据值的大小存储在 1、2、3、4、6 或 8 字节中。 |
+| INTEGER | 值是一个带符号的整数，根据值的大小存储在 1、2、3、4、6 或 8 字节中。<br />例如，INT1的取值范围-128~127 |
 | REAL    | 值是一个浮点值，存储为 8 字节的 IEEE 浮点数字。              |
 | TEXT    | 值是一个文本字符串，使用数据库编码（UTF-8、UTF-16BE 或 UTF-16LE）存储。 |
 | BLOB    | 值是一个 blob 数据，完全根据它的输入存储。                   |
@@ -76,48 +76,15 @@ SQLite支持列的亲和类型概念。任何列仍然可以存储任何类型�
 
 下表列出了当创建 SQLite3 表时可使用的各种数据类型名称，同时也显示了相应的亲和类型：
 
-- INT
-- INTEGER
-- TINYINT
-- SMALLINT
-- MEDIUMINT
-- BIGINT
-- UNSIGNED BIG INT
-- INT2
-- INT8
+| Example Typenames From The CREATE TABLE Statement or CAST Expression | Resulting Affinity | Rule Used To Determine Affinity |
+| :----------------------------------------------------------- | :----------------- | :------------------------------ |
+| INT<br />INTEGER<br />TINYINT<br />SMALLINT<br />MEDIUMINT<br />BIGINT<br />UNSIGNED BIG INT<br />INT2<br />INT8 | INTEGER            | 1                               |
+| CHARACTER(20)<br />VARCHAR(255)<br />VARYING CHARACTER(255)<br />NCHAR(55)<br />NATIVE CHARACTER(70)<br />NVARCHAR(100)<br />TEXT<br />CLOB | TEXT               | 2                               |
+| BLOB *no datatype specified*                                 | BLOB               | 3                               |
+| REAL<br />DOUBLE<br />DOUBLE PRECISION<br />FLOAT            | REAL               | 4                               |
+| NUMERIC<br />DECIMAL(10,5)<br />BOOLEAN<br />DATE<br />DATETIME | NUMERIC            | 5                               |
 
-被归入亲和类型INTEGER
-
-- CHARACTER(20)
-- VARCHAR(255)
-- VARYING CHARACTER(255)
-- NCHAR(55)
-- NATIVE CHARACTER(70)
-- NVARCHAR(100)
-- TEXT
-- CLOB
-
-被归入亲和类型TEXT
-
-- BLOB
-- no datatype specified
-
-被归入亲和类型NONE
-
-- REAL
-- DOUBLE
-- DOUBLE PRECISION
-- FLOAT
-
-被归入亲和类型REAL
-
-- NUMERIC
-- DECIMAL(10,5)
-- BOOLEAN
-- DATE
-- DATETIME
-
-被归入亲和类型NUMERIC
+**Note**: that numeric arguments in parentheses that following the type name (ex: "VARCHAR(255)") are ignored by SQLite - SQLite does not impose any length restrictions (other than the large global SQLITE_MAX_LENGTH limit) on the length of strings, BLOBs or numeric values.
 
 ### 1.3.4、Boolean 数据类型
 
