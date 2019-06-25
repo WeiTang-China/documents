@@ -29,11 +29,11 @@ CUR_BRANCH=${CUR_BRANCH##*/}
 
 DIRECT_PUSH=`git config direct.push`
 
-if [ DIRECT_PUSH = "true" ]
+if [ $DIRECT_PUSH = "true" ]
 then
-	echo "git push $REMOTE_NAME HEAD:refs/for/$CUR_BRANCH"
-	git push $REMOTE_NAME HEAD:refs/for/$CUR_BRANCH
-else
 	echo "git push $REMOTE_NAME $CUR_BRANCH"
 	git push $REMOTE_NAME $CUR_BRANCH
+else
+	echo "git push $REMOTE_NAME HEAD:refs/for/$CUR_BRANCH"
+	git push $REMOTE_NAME HEAD:refs/for/$CUR_BRANCH
 fi
