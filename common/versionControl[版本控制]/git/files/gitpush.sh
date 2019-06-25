@@ -21,15 +21,20 @@ then
     fi
 fi
 
+# Helper£º
+
 CUR_BRANCH=`git branch -vv | grep \* | awk '{print $4}'`
 CUR_BRANCH=${CUR_BRANCH:1:`expr ${#CUR_BRANCH}-2`}
 
-REMOTE_NAME=${CUR_BRANCH%/*}
-CUR_BRANCH=${CUR_BRANCH##*/}
+REMOTE_NAME=${CUR_BRANCH%%/*}
+CUR_BRANCH=${CUR_BRANCH#*/}
+CUR_BRANCH=${CUR_BRANCH%%:*}
 
 DIRECT_PUSH=`git config direct.push`
 
-if [ $DIRECT_PUSH = "true" ]
+echo "REMOTE_NAME=$REMOTE_NAME; CUR_BRANCH=$CUR_BRANCH; DIRECT_PUSH=$DIRECT_PUSH;"
+
+if [ "$DIRECT_PUSH" = "true" ]
 then
 	echo "git push $REMOTE_NAME $CUR_BRANCH"
 	git push $REMOTE_NAME $CUR_BRANCH

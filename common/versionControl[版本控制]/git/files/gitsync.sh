@@ -26,8 +26,11 @@ CUR_BRANCH_SHOW_NAME=`git branch -vv | grep \* | awk '{print $2}'`
 CUR_BRANCH=`git branch -vv | grep \* | awk '{print $4}'`
 CUR_BRANCH=${CUR_BRANCH:1:`expr ${#CUR_BRANCH}-2`}
 
-REMOTE_NAME=${CUR_BRANCH%/*}
-CUR_BRANCH=${CUR_BRANCH##*/}
+REMOTE_NAME=${CUR_BRANCH%%/*}
+CUR_BRANCH=${CUR_BRANCH#*/}
+CUR_BRANCH=${CUR_BRANCH%%:*}
+
+# echo "REMOTE_NAME=$REMOTE_NAME; CUR_BRANCH=$CUR_BRANCH; CUR_BRANCH_SHOW_NAME=$CUR_BRANCH_SHOW_NAME;"
 
 if [ "$1" != "" ] && [ "$1" != "$CUR_BRANCH" ] && [ "$1" != "$CUR_BRANCH_SHOW_NAME" ]
 then
