@@ -21,13 +21,26 @@ then
     fi
 fi
 
+# Helper
+# ${string: start :length}	从 string 字符串的左边第 start 个字符开始，向右截取 length 个字符。
+# ${string: start}	从 string 字符串的左边第 start 个字符开始截取，直到最后。
+# ${string: 0-start :length}	从 string 字符串的右边第 start 个字符开始，向右截取 length 个字符。
+# ${string: 0-start}	从 string 字符串的右边第 start 个字符开始截取，直到最后。
+# ${string#*chars}	从 string 字符串第一次出现 *chars 的位置开始，截取 *chars 右边的所有字符。
+# ${string##*chars}	从 string 字符串最后一次出现 *chars 的位置开始，截取 *chars 右边的所有字符。
+# ${string%*chars}	从 string 字符串第一次出现 *chars 的位置开始，截取 *chars 左边的所有字符。
+# ${string%%*chars}	从 string 字符串最后一次出现 *chars 的位置开始，截取 *chars 左边的所有字符。
+
 CUR_BRANCH_SHOW_NAME=`git branch -vv | grep \* | awk '{print $2}'`
 
 CUR_BRANCH=`git branch -vv | grep \* | awk '{print $4}'`
+# 掐头去尾，去掉最外面的[]
 CUR_BRANCH=${CUR_BRANCH:1:`expr ${#CUR_BRANCH}-2`}
-
+# 第一个/左边的是remote名称，一般是origin
 REMOTE_NAME=${CUR_BRANCH%%/*}
+# 第一个/右边的内容，可能是"分支名: ahead 1, behind 4"
 CUR_BRANCH=${CUR_BRANCH#*/}
+# 第一个:左边的内容，最终取到分支名
 CUR_BRANCH=${CUR_BRANCH%%:*}
 
 # echo "REMOTE_NAME=$REMOTE_NAME; CUR_BRANCH=$CUR_BRANCH; CUR_BRANCH_SHOW_NAME=$CUR_BRANCH_SHOW_NAME;"
