@@ -57,11 +57,5 @@ then
     CUR_BRANCH=$INPUT_BRANCH
 fi
 
-if [ "$CUR_BRANCH" = "master" ]
-then
-    GIT_POOL=
-    CUR_BRANCH=
-fi
-
 echo "git pull -r $REMOTE_NAME $CUR_BRANCH"
 git pull -r $REMOTE_NAME $CUR_BRANCH

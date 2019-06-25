@@ -27,12 +27,13 @@ CUR_BRANCH=${CUR_BRANCH:1:`expr ${#CUR_BRANCH}-2`}
 REMOTE_NAME=${CUR_BRANCH%/*}
 CUR_BRANCH=${CUR_BRANCH##*/}
 
-if [ "$CUR_BRANCH" = "master" ]
+DIRECT_PUSH=`git config direct.push`
+
+if [ DIRECT_PUSH = "true" ]
 then
-    GIT_POOL=
-    CUR_BRANCH=
+	echo "git push $REMOTE_NAME HEAD:refs/for/$CUR_BRANCH"
+	git push $REMOTE_NAME HEAD:refs/for/$CUR_BRANCH
+else
+	echo "git push $REMOTE_NAME $CUR_BRANCH"
+	git push $REMOTE_NAME $CUR_BRANCH
 fi
-
-echo "git push $REMOTE_NAME HEAD:refs/for/$CUR_BRANCH"
-
-git push $REMOTE_NAME HEAD:refs/for/$CUR_BRANCH
