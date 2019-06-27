@@ -259,13 +259,11 @@ public class ConcertActivity extends AppCompatActivity {
 
 ## Display paged lists
 
-This guide builds upon the [Paging Library overview](https://developer.android.com/topic/libraries/architecture/paging/index), describing how you can present lists of information to users in your app's UI, particularly when this information changes.
+本指南基于[Paging Library overview](#Paging Library overview)，描述了如何在app UI中向用户显示信息列表，尤其是在此信息发生变化时。
 
 ### Connect your UI to your view model
 
-You can connect an instance of [`LiveData`](https://developer.android.com/reference/androidx/lifecycle/LiveData) to a [`PagedListAdapter`](https://developer.android.com/reference/androidx/paging/PagedListAdapter), as shown in the following code snippet:
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/paging/ui#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/paging/ui#java)
+您可以将`LiveData`的实例连接到`PagedListAdapter`，如以下代码片段所示：
 
 ```java
 public class ConcertActivity extends AppCompatActivity {
@@ -281,11 +279,7 @@ public class ConcertActivity extends AppCompatActivity {
 }
 ```
 
-
-
-As data sources provide new instances of [`PagedList`](https://developer.android.com/reference/androidx/paging/PagedList), the activity sends these objects to the adapter. The[`PagedListAdapter`](https://developer.android.com/reference/androidx/paging/PagedListAdapter) implementation defines how updates are computed, and it automatically handles paging and list diffing. Therefore, your [`ViewHolder`](https://developer.android.com/reference/androidx/recyclerview/widget/RecyclerView.ViewHolder) only needs to bind to a particular provided item:
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/paging/ui#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/paging/ui#java)
+当数据源提供`PagedList`的新实例时，Activit会将这些对象发送到adapter。 `PagedListAdapter`的实现类定义了如何计算更新，并自动处理分页和列表差异。因此，您的`ViewHolder`只需要绑定到特定的提供项：
 
 ```java
 public class ConcertAdapter
@@ -308,17 +302,13 @@ public class ConcertAdapter
 }
 ```
 
+`PagedListAdapter`使用`PagedList.Callback`对象处理页面加载事件。当UI滚动时，`PagedListAdapter`调用`PagedList.loadAround()`来向底层`PagedList`提供关于它应该从`DataSource`获取哪些项的提示。
 
-
-The [`PagedListAdapter`](https://developer.android.com/reference/androidx/paging/PagedListAdapter) handles page load events using a [`PagedList.Callback`](https://developer.android.com/reference/androidx/paging/PagedList.Callback) object. As the user scrolls, the `PagedListAdapter` calls [`PagedList.loadAround()`](https://developer.android.com/reference/androidx/paging/PagedList#loadaround) to provide hints to the underlying [`PagedList`](https://developer.android.com/reference/androidx/paging/PagedList) as to which items it should fetch from the [`DataSource`](https://developer.android.com/reference/androidx/paging/DataSource).
-
-**Note:** [`PagedList`](https://developer.android.com/reference/androidx/paging/PagedList) is content-immutable. This means that, although new content can be loaded into an instance of `PagedList`, the loaded items themselves cannot change once loaded. As such, if content in a `PagedList` updates, the[`PagedListAdapter`](https://developer.android.com/reference/androidx/paging/PagedListAdapter) object receives a completely new `PagedList` that contains the updated information.
+**Note:** `PagedList`是内容不可变的。这意味着，虽然可以将新内容加载到`PagedList`的实例中，但加载的项本身一旦加载就无法更改。因此，如果`PagedList`中的内容更新，则`PedagedListAdapter`对象将接收包含更新信息的全新`PagedList`。
 
 ### Implement the diffing callback
 
-The following sample shows a manual implementation of [`areContentsTheSame()`](https://developer.android.com/reference/androidx/recyclerview/widget/DiffUtil.ItemCallback#arecontentsthesame), which compares relevant object fields:
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/paging/ui#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/paging/ui#java)
+以下示例显示了`areContentsTheSame()`的手动实现，它比较了相关的对象字段：
 
 ```java
 private static DiffUtil.ItemCallback<Concert> DIFF_CALLBACK =
@@ -339,30 +329,28 @@ private static DiffUtil.ItemCallback<Concert> DIFF_CALLBACK =
 };
 ```
 
-
-
-Because your adapter includes your definition of comparing items, the adapter automatically detects changes to these items when a new `PagedList` object is loaded. As a result, the adapter triggers efficient item animations within your `RecyclerView` object.
+由于adapter包含比较项的定义，因此adapter会在加载新的`PagedList`对象时自动检测对这些项的更改。因此，adapter会在您的`RecyclerView`对象中触发高效的item动画。
 
 ### Diffing using a different adapter type
 
-If you choose not to inherit from [`PagedListAdapter`](https://developer.android.com/reference/androidx/paging/PagedListAdapter)—such as when you're using a library that provides its own adapter—you can still use the Paging Library adapter's diffing functionality by working directly with an[`AsyncPagedListDiffer`](https://developer.android.com/reference/androidx/paging/AsyncPagedListDiffer) object.
+如果您选择不从`PagedListAdapter`继承 - 例如当您使用提供自定义的adapter库时 - 您仍然可以通过直接使用`AsyncPagedListDiffer`对象来使用Paging Library adapter的diffing功能。
 
 ### Provide placeholders in your UI
 
-In cases where you want your UI to display a list before your app has finished fetching data, you can show placeholder list items to your users. The [`PagedList`](https://developer.android.com/reference/androidx/paging/PagedList) handles this case by presenting the list item data as `null`until the data is loaded.
+如果您希望UI在app完成获取数据之前显示列表，您可以向用户显示placeholer item。`PagedList`通过将列表项数据显示为“null”直到加载数据完成的方式，处理这种情况。
 
-**Note:** By default, the Paging Library enables this placeholder behavior.
+**Note:** Paging库默认启用placeholder特性。
 
-Placeholders have the following benefits:
+Placeholder有如下好处：
 
-- **Support for scrollbars:** The [`PagedList`](https://developer.android.com/reference/androidx/paging/PagedList) provides the number of list items to the [`PagedListAdapter`](https://developer.android.com/reference/androidx/paging/PagedListAdapter). This information allows the adapter to draw a scrollbar that conveys the full size of the list. As new pages load, the scrollbar doesn't jump because your list doesn't change size.
-- **No loading spinner necessary:** Because the list size is already known, there's no need to alert users that more items are loading. The placeholders themselves convey that information.
+- **支持滚动条：** `PagedList`为`PagedListAdapter`提供列表item的数量。此信息允许adapter绘制一个滚动条，根据列表的完整大小。加载新页面时，滚动条不会跳转，因为列表不会更改大小。
+- **不在需要loading提示条：**因为列表大小已知，所以无需提醒用户正在加载更多项目。Placeholder本身传达了这些信息。
 
-Before adding support for placeholders, though, keep the following preconditions in mind:
+但是，在添加对placeholder的支持之前，请记住以下前提条件：
 
-- **Requires a countable data set:** Instances of [`DataSource`](https://developer.android.com/reference/androidx/paging/DataSource) from the [Room persistence library](https://developer.android.com/topic/libraries/architecture/room) can efficiently count their items. If you're using a custom local storage solution or a [network-only data architecture](https://developer.android.com/topic/libraries/architecture/paging#network-only-data-arch), however, it might be expensive or even impossible to determine how many items comprise your data set.
-- **Requires adapter to account for unloaded items:** The adapter or presentation mechanism that you use to prepare the list for inflation needs to handle null list items. For example, when binding data to a[`ViewHolder`](https://developer.android.com/reference/androidx/recyclerview/widget/RecyclerView.ViewHolder), you need to provide default values to represent unloaded data.
-- **Requires same-sized item views:** If list item sizes can change based on their content, such as social networking updates, crossfading between items doesn't look good. We strongly suggest disabling placeholders in this case.
+- **需要知道总数的数据集：** [`room库`](https://developer.android.com/topic/libraries/architecture/room)中的`DataSource`实例可以有效地计算其item数量。如果您使用的是自定义本地存储解决方案或[network-only data architecture](#Network only)，x想要知道数据集中包含多少项可能很昂贵甚至无法确定。
+- **需要adapter来考虑未装载的项目：**用于准备inflate list的adapter需要处理空item。例如，将数据绑定到`ViewHolder`时，需要提供默认值来表示未加载的数据。
+- **需要相同大小的item view：**如果list item大小可以根据其内容（例如社交网络更新）进行更改，则item之间的交叉淡化看起来不太好。我们强烈建议在这种情况下禁用placeholder。
 
 ### Provide feedback
 
@@ -371,24 +359,6 @@ Share your feedback and ideas with us through these resources:
 - [Issue tracker](https://issuetracker.google.com/issues/new?component=413106&template=1096385) ![img](https://developer.android.com/topic/libraries/architecture/images/bug.png)
 
   Report issues so we can fix bugs.
-
-### Additional resources
-
-To learn more about the Paging Library, consult the following resources.
-
-#### Samples
-
-- [Android Architecture Components Paging sample](https://github.com/googlesamples/android-architecture-components/tree/master/PagingSample)
-- [Paging With Network Sample](https://github.com/googlesamples/android-architecture-components/tree/master/PagingWithNetworkSample)
-
-#### Codelabs
-
-- [Android Paging codelab](https://codelabs.developers.google.com/codelabs/android-paging/index.html?index=..%2F..%2Findex#0)
-
-#### Videos
-
-- [Android Jetpack: manage infinite lists with RecyclerView and Paging (Google I/O '18)](https://www.youtube.com/watch?v=BE5bsyGGLf4)
-- [Android Jetpack: Paging](https://www.youtube.com/watch?v=QVMqCRs0BNA)
 
 
 
