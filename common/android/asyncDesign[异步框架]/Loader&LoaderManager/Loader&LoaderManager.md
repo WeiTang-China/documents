@@ -90,7 +90,7 @@ public boolean onQueryTextChanged(String newText) {
 - *uri*：用于检索内容的 URI
 - *projection*：要返回的列的列表。传递 `null` 时，将返回所有列，这样会导致效率低下
 - *selection*：一种用于声明要返回哪些行的过滤器，采用 SQL WHERE 子句格式（WHERE 本身除外）。传递 `null` 时，将为指定的 URI 返回所有行
-- *selectionArgs*：您可以在 selection 中包含 ?s，它将按照在 selection 中显示的顺序替换为 *selectionArgs* 中的值。该值将绑定为字串符
+- *selectionArgs*：您可以在 selection 中包含 ?，它将按照在 selection 中显示的顺序替换为 *selectionArgs* 中的值。该值将绑定为字串符
 - *sortOrder*：行的排序依据，采用 SQL ORDER BY 子句格式（ORDER BY 自身除外）。传递 `null` 时，将使用默认排序顺序（可能并未排序）
 
 例如：

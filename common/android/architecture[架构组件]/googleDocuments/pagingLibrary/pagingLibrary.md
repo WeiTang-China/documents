@@ -1,22 +1,20 @@
 # Paging Library
 
-## Paging library overview   **Part of Android Jetpack.**
+## Paging library overview
 
-The Paging Library helps you load and display small chunks of data at a time. Loading partial data on demand reduces usage of network bandwidth and system resources.
+Paging库可帮助您一次加载和显示小块数据。按需加载部分数据可减少网络带宽和系统资源的使用。
 
-This guide provides several conceptual examples of the library, along with an overview of how it works. To view complete examples of how this library functions, try out the codelab and samples from the [additional resources](https://developer.android.com/topic/libraries/architecture/paging#additional-resources)section.
+本指南提供了paging库的几个概念性示例，以及它如何工作的概述。要查看paging库如何工作的完整示例，请尝试使用[additional resources](https://developer.android.com/topic/libraries/architecture/paging#additional-resources)部分中的codelab和示例。
 
 ### Library architecture
 
-This section describes and shows the main components of the paging library.
+本节描述并展示了paging库的主要组件。
 
 #### PagedList
 
-The Paging Library's key component is the [`PagedList`](https://developer.android.com/reference/androidx/paging/PagedList) class, which loads chunks of your app's data, or *pages*. As more data is needed, it's paged into the existing `PagedList` object. If any loaded data changes, a new instance of `PagedList` is emitted to the observable data holder from a [`LiveData`](https://developer.android.com/reference/androidx/lifecycle/LiveData) or RxJava2-based object. As [`PagedList`](https://developer.android.com/reference/androidx/paging/PagedList)objects are generated, your app's UI presents their contents, all while respecting your UI controllers' [lifecycles](https://developer.android.com/topic/libraries/architecture/lifecycle).
+Paging库的关键组件是[`PagedList`](https://developer.android.com/reference/androidx/paging/PagedList)类，它可以加载应用程序数据块或*页面*。由于需要更多数据，因此将其分页到现有的`PagedList`对象中。如果任何加载的数据发生更改，则会从`LiveData`或基于RxJava2的新的`PagedList`实例发送到可观察数据持有者对象。当生成`PagedList`对象时，应用程序的UI会显示其内容，同时遵守UI控制器的生命周期。
 
-The following code snippet shows how you can configure your app's view model to load and present data using a `LiveData` holder of `PagedList` objects:
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/paging#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/paging#java)
+以下代码段展示了如何使用`PagedList`对象的`LiveData`持有者配置应用程序的view model以加载和显示数据：
 
 ```java
 public class ConcertViewModel extends ViewModel {
@@ -32,15 +30,11 @@ public class ConcertViewModel extends ViewModel {
 }
 ```
 
-
-
 #### Data
 
-Each instance of [`PagedList`](https://developer.android.com/reference/androidx/paging/PagedList) loads an up-to-date snapshot of your app's data from its corresponding [`DataSource`](https://developer.android.com/reference/androidx/paging/DataSource)object. Data flows from your app's backend or database into the `PagedList` object.
+`PagedList`的每个实例从相应的`DataSource`对象加载应用程序数据的最新快照。数据从应用程序的后端或数据库流入`PagedList`对象。
 
-The following example uses the [Room persistence library](https://developer.android.com/training/data-storage/room) to organize your app's data, but if you want to store your data using another means, you can also [provide your own data source factory](https://developer.android.com/topic/libraries/architecture/paging/data#custom-data-source).
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/paging#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/paging#java)
+以下示例使用[room库](https://developer.android.com/training/data-storage/room)来组织应用程序的数据，但如果要使用其他方式存储数据，还可以使用 [Build your own data sources](#Build your own data sources)。
 
 ```java
 @Dao
@@ -52,94 +46,88 @@ public interface ConcertDao {
 }
 ```
 
-
-
-To learn more about how you can load data into `PagedList` objects, see the guide on how to [Load paged data](https://developer.android.com/topic/libraries/architecture/paging/data).
+要了解有关如何将数据加载到`PagedList`对象的更多信息，请参阅有关如何[Gather paged data](#Gather paged data)的指南。
 
 #### UI
 
-The [`PagedList`](https://developer.android.com/reference/androidx/paging/PagedList) class works with a `PagedListAdapter` to load items into a [`RecyclerView`](https://developer.android.com/reference/androidx/recyclerview/widget/RecyclerView). These classes work together to fetch and display content as it's loaded, prefetching out-of-view content and animating content changes.
+`PagedList`类使用`PagedListAdapter`将项目加载到[`RecyclerView`]。 这些类一起工作以在加载内容时获取和显示内容，预取视图内容并动画呈现内容变化。
 
-To learn more, see the guide on how to [Display paged lists](https://developer.android.com/topic/libraries/architecture/paging/ui).
+获取更多信息，请参阅 [Display paged lists](#Display paged lists)。
 
 ### Support different data architectures
 
-The Paging Library supports the following data architectures:
+Paging库支持如下数据架构：
 
-- Served only from a backend server.
-- Stored only in an on-device database.
-- A combination of the other sources, using the on-device database as a cache.
+- 仅由后端服务器提供
+- 仅存储在设备上的数据库中
+- 使用设备上数据库作为缓存，并组合其他源
 
-Figure 1 shows how data flows in each of these architecture scenarios. In the case of a network-only or database-only solution, the data flows directly to your app's UI model. If you're using a combined approach, data flows from your backend server, into an on-device database, and then to your app's UI model. Every once in a while, the endpoint of each data flow runs out of data to load, at which point it requests more data from the component that provided the data. For example, when an on-device database runs out of data, it requests more data from the server.
+图1显示了每种架构方案中数据的流动方式。对于仅限网络或仅限数据库的解决方案，数据直接流向应用程序的UI模型。如果您使用的是组合方法，则数据会从后端服务器流入设备上的数据库，然后流入应用程序的UI模型。每隔一段时间，每个数据流的端点就会耗尽要加载的数据，此时它会从提供数据的组件请求更多数据。例如，当设备上数据库用完数据时，它会从服务器请求更多数据。
 
 ![Diagrams of data flows](files/paging-library-data-flow.webp)
 
-**Figure 1.** How data flows through each of the architectures that the Paging Library supports
+**图1.** Paging库的数据流向图
 
-The remainder of this section provides recommendations for configuring each data flow use case.
+本节的其余部分提供了配置每个数据流用例的建议。
 
 #### Network only
 
-To display data from a backend server, use the synchronous version of the [Retrofit API](http://square.github.io/retrofit/) to load information into [your own custom `DataSource` object](https://developer.android.com/topic/libraries/architecture/paging/data#custom-data-source).
+要显示来自后端服务器的数据，可以使用[Retrofit API](http://square.github.io/retrofit/)的同步版本将信息加载到[您自己的自定义`DataSource`对象](#Build your own data sources)中。
 
-**Note:** The Paging Library's [`DataSource`](https://developer.android.com/reference/androidx/paging/DataSource) objects don't provide any error handling because different apps handle and present error UIs in different ways. If an error occurs, defer to your result callback, and retry the request later. See the [PagingWithNetwork sample](https://github.com/googlesamples/android-architecture-components/tree/master/PagingWithNetworkSample) for an example of this behavior.
+**Note:** Paging库的`DataSource`对象不提供任何错误处理，因为不同的应用程序以不同的方式处理和呈现错误UI。一旦发生错误，将会回推给结果回调，你可以稍后重试该请求。有关此行为的示例，请参阅[PagingWithNetwork示例](https://github.com/googlesamples/android-architecture-components/tree/master/PagingWithNetworkSample)。
 
 #### Database only
 
-Set up your [`RecyclerView`](https://developer.android.com/reference/androidx/recyclerview/widget/RecyclerView) to observe local storage, preferably using the [Room persistence library](https://developer.android.com/topic/libraries/architecture/room). That way, whenever data is inserted or modified in your app's database, these changes are automatically reflected in the `RecyclerView` that's displaying this data.
+让`RecyclerView`观察本地存储，最好使用`Room库`。这样，无论何时在应用程序的数据库中插入或修改数据，这些更改都会自动反映在显示此数据的`RecyclerView`中。
 
 #### Network and database
 
-After you've started observing the database, you can listen for when the database is out of data by using[`PagedList.BoundaryCallback`](https://developer.android.com/reference/androidx/paging/PagedList.BoundaryCallback). You can then fetch more items from your network and insert them into the database. If your UI is observing the database, that's all you need to do.
+在开始观察数据库变化之后，您可以使用[`PagedList.BoundaryCallback`](https://developer.android.com/reference/androidx/paging/PagedList.BoundaryCallback)监听数据库何时没有数据。然后，您可以从网络中获取更多项目并将其插入数据库。如果您的UI正在观察数据库变化，如上这些操作都是需要做的。
 
 ### Handle network errors
 
-When using a network to fetch or page the data that you're displaying using the Paging Library, it's important to not treat the network as being either "available" or "unavailable" all the time, as many connections are intermittent or flaky:
+当使用网络获取或分页您正在使用分页库显示的数据时，重要的是不要将网络视为“可用”或“不可用”，因为许多连接是间歇性的或片状的：
 
-- A particular server might fail to respond to a network request.
-- The device might be connected to a network that's slow or weak.
+- 特定服务器可能无法响应网络请求。
+- 设备可能连接到缓慢或信号弱的网络。
 
-Instead, your app should check each request for failures and recover as gracefully as possible in cases where the network isn't available. For example, you can provide a "retry" button for users to select if the data refresh step doesn't work. If an error occurs during the data paging step, it's best to retry the paging requests automatically.
+相反，应用应该检查每个失败请求，并在网络不可用的情况下尽可能优雅地恢复。例如，您可以提供“重试”按钮，由用户来选择数据刷新是否不能正常工作。如果在数据分页步骤期间发生错误，则最好自动重试分页请求。
 
 ### Update your existing app
 
-If your app already consumes data from a database or a backend source, it's possible to upgrade directly to functionality that the Paging Library provides. This section shows how to upgrade an app that has a common existing design.
+如果您的app已经使用了数据库或后端源中的数据，则可以直接升级到Paging库提供的功能。本节介绍如何升级已存在的具有通用设计的app。
 
 #### Custom paging solutions
 
-If you use custom functionality to load small subsets of data from your app's data source, you can replace this logic with that from the [`PagedList`](https://developer.android.com/reference/androidx/paging/PagedList) class. Instances of `PagedList` offer built-in connections to common data sources. These instances also provide adapters for [`RecyclerView`](https://developer.android.com/reference/androidx/recyclerview/widget/RecyclerView) objects that you might include in your app's UI.
+如果您使用自定义功能从应用程序的数据源加载小的数据子集，则可以将此逻辑替换为`PagedList`类中的逻辑。`PagedList`的实例提供与公共数据源的内置连接。这些实例还为您可能包含在app UI中的`RecyclerView`对象提供adapter。
 
 #### Data loaded using lists instead of pages
 
-If you use an in-memory list as the backing data structure for your UI's adapter, consider observing data updates using a [`PagedList`](https://developer.android.com/reference/androidx/paging/PagedList) class if the number of items in the list can become large. Instances of `PagedList` can use either [`LiveData`](https://developer.android.com/reference/androidx/lifecycle/LiveData) or `Observable<List>` to pass data updates to your app's UI, minimizing load times and memory usage. Better still, replacing a [`List`](https://developer.android.com/reference/java/util/List) object with a `PagedList` object in your app doesn't require any changes to your app's UI structure or data updating logic.
+如果使用内存中的List作为UI adapter的后备数据结构，请考虑更换`PagedList`类来监视数据变化（例如List中的数量可能变大）。`PagedList`的实例可以使用`LiveData`或`Observable<List>`将数据变化传递到app的UI，从而最大限度地减少加载时间和内存使用量。更好的是，在app中用`PagedList`对象替换`List`对象不需要对应用程序的UI结构或数据变化逻辑进行任何更改。
 
 #### Associate a data cursor with a list view using CursorAdapter
 
-Your app might use a [`CursorAdapter`](https://developer.android.com/reference/android/widget/CursorAdapter) to associate data from a [`Cursor`](https://developer.android.com/reference/android/database/Cursor) with a [`ListView`](https://developer.android.com/reference/android/widget/ListView). In that case, you usually need to migrate from a `ListView` to a [`RecyclerView`](https://developer.android.com/reference/androidx/recyclerview/widget/RecyclerView) as your app's list UI container, then replace the `Cursor`component with either [Room](https://developer.android.com/topic/libraries/architecture/room) or `PositionalDataSource`, depending on whether instances of `Cursor` access a SQLite database.
+app可能使用`CursorAdapter`将来自`Cursor`的数据与`ListView`相关联。在这种情况下，通常需要从`ListView`迁移到`RecyclerView`作为app的列表UI容器，然后将`Cursor`组件替换为`Room`或`PositionalDataSource`，具体取决于`Cursor`的实例是否访问SQLite数据库。
 
-In some situations, such as when working with instances of [`Spinner`](https://developer.android.com/reference/android/widget/Spinner), you provide only the adapter itself. A library then takes the data that's loaded into that adapter and displays the data for you. In these situations, change the type of your adapter's data to [`LiveData`](https://developer.android.com/reference/androidx/lifecycle/LiveData), then wrap this list in an [`ArrayAdapter`](https://developer.android.com/reference/android/widget/ArrayAdapter) object before attempting to have a library class inflate these items in a UI.
+在某些情况下，例如使用`Spinner`实例时，只提供adapter。然后，Paging库将获取加载到该adapter中的数据并为您显示数据。在这些情况下，将adapter数据的类型更改为`LiveData`，然后在尝试让Paging库的类在UI中对item进行inflate之前，将此列表包装在“ArrayAdapter”对象中。
 
 #### Load content asynchronously using AsyncListUtil
 
-If you're using [`AsyncListUtil`](https://developer.android.com/reference/androidx/recyclerview/widget/AsyncListUtil) objects to load and display groups of information asynchronously, the Paging Library lets you load data more easily:
+如果使用[`AsyncListUtil`](https://developer.android.com/reference/androidx/recyclerview/widget/AsyncListUtil)对象异步加载和显示信息组，则Paging库可让您更轻松地加载数据：
 
-- **Your data doesn't need to be positional.** The Paging Library lets you load data directly from your backend using keys that the network provides.
-- **Your data can be uncountably large.** Using the Paging Library, you can load data into pages until there isn't any data remaining.
-- **You can observe your data more easily.** The Paging library can present your data that your app's ViewModel holds in an observable data structure.
+- **数据不是位置强相关的。`Your data doesn't need to be positional.`** Paging库允许使用网络提供的密钥直接从后端加载数据。
+- **数据可能非常大。** 使用Paging库，可以一页一页地加载数据，直到没有剩余数据。
+- **可以更轻松地observe数据变化。** Paging库可以展示被app的ViewModel持有的数据，在一个observable的数据结构中。
 
-**Note:** If your existing app accesses a SQLite database, see the section on [using the Room persistence library](https://developer.android.com/topic/libraries/architecture/room).
-
-
+**Note:** 如果现有app使用SQLite数据库，请参阅[使用Room持久性库](https://developer.android.com/topic/libraries/architecture/room)部分。
 
 ### Database examples
 
-The following code snippets show several possible ways of having all the pieces work together.
+以下代码片段显示了使所有部分协同工作的几种可能方法。
 
 #### Observing paged data using LiveData
 
-The following code snippet shows all the pieces working together. As concert events are added, removed, or changed in the database, the content in the [`RecyclerView`](https://developer.android.com/reference/androidx/recyclerview/widget/RecyclerView.html) is automatically and efficiently updated:
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/paging#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/paging#java)
+以下代码段显示了一起工作的所有代码。当在数据库中添加、删除或更改音乐会事件时，`RecyclerView`中的内容将自动高效地更新：
 
 ```java
 @Dao
@@ -212,13 +200,9 @@ public class ConcertAdapter
 }
 ```
 
-
-
 #### Observing paged data using RxJava2
 
-If you prefer using [RxJava2](https://github.com/ReactiveX/RxJava) instead of [`LiveData`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html), you can instead create an `Observable` or `Flowable`object:
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/paging#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/paging#java)
+如果您更喜欢使用[`RxJava2`](https://github.com/ReactiveX/RxJava)而不是`LiveData`，可以改为创建一个`Observable`或`Flowable` object：
 
 ```java
 public class ConcertViewModel extends ViewModel {
@@ -235,11 +219,7 @@ public class ConcertViewModel extends ViewModel {
 }
 ```
 
-
-
-You can then start and stop observing the data using the code in the following snippet:
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/paging#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/paging#java)
+然后，可以使用以下代码开始和停止observe数据：
 
 ```java
 public class ConcertActivity extends AppCompatActivity {
@@ -273,9 +253,7 @@ public class ConcertActivity extends AppCompatActivity {
 }
 ```
 
-
-
-The code for the `ConcertDao` and `ConcertAdapter` are the same for an [RxJava2](https://github.com/ReactiveX/RxJava)-based solution as they are for a [`LiveData`](https://developer.android.com/reference/androidx/lifecycle/LiveData.html)-based solution.
+`ConcertDao`和`ConcertAdapter`的代码与[RxJava2](https://github.com/ReactiveX/RxJava解决方案的代码相同，因为它们适用于基于`LiveData`的解决方案。
 
 
 
