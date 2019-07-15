@@ -143,9 +143,33 @@ git config --global --add gui.encoding utf-8
 
 ## 2.6、[Microsoft Word 进行版本控制](https://www.cnblogs.com/yezuhui/p/6853271.html)
 
+1. Install pandoc.   去http://pandoc.org/installing.html 找到合适的pandoc下载文件，然后下载安装。
 
+2. 编辑 ~/.gitconfig 文件，添加
 
+   ```properties
+   [diff "pandoc"]
+     textconv=pandoc --to=markdown
+     prompt=false
+   [alias]
+     wdiff = diff --word-diff=color
+   ```
 
+   或者使用如下命令：
+
+   ```shell
+   git config --global diff.pandoc.textconv="pandoc --to=markdown"
+   git config --global diff.pandoc.prompt="false"
+   git config --global alias.wdiff="diff --word-diff=color"
+   ```
+
+3. 然后在你的工程目录下新建一个 .gitattributes，写入：
+
+   ```properties
+   *.docx diff=pandoc
+   ```
+
+   如果是doc文件，把docx换成doc应该也是一样的。
 
 
 
