@@ -83,10 +83,11 @@ mergetool的配置在.gitconfig中修改，如下所示（注意缩进）：
 ## 2.2、快捷sync & push脚本(免输入当前的branch)
 
 把files目录中的gitpush.sh和gitsync.sh拷贝到git对应的上下文目录中，例如：
-windows
-    `D:\installed\Git\usr\bin`
-linux
-    `/home/mine/bin/`
+
+- **windows**
+      `D:\installed\Git\usr\bin`
+- **linux**
+      `/home/mine/bin/`
 
 
 
@@ -106,6 +107,12 @@ shell终端下不能gitk，完全需要用log来查看，新增一个或几个al
 
 - 查询commitlog相关，模糊匹配
   --grep=''
+
+个人常用
+
+`git config --global alias.glog "log --color --oneline --decorate --graph --pretty=format:'%C(red)%h%Creset -%C(yellow)%d%Creset %Cgreen(%cd) %C(bold blue)%an%Creset %s' --date=short"`
+
+
 
 
 
