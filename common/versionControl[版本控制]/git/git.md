@@ -141,7 +141,7 @@ git config --global --add gui.encoding utf-8
 
 
 
-
+## 2.6、[Microsoft Word 进行版本控制](https://www.cnblogs.com/yezuhui/p/6853271.html)
 
 
 
