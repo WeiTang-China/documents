@@ -3999,19 +3999,63 @@ y
 null
 ```
 
+## 1.43、`NULL`的处理
 
+官网地址：https://www.sqlite.org/nulls.html
 
+下表说明了对`NULL`的处理：
 
+|                                          | **SQLite** |
+| ---------------------------------------- | :--------: |
+| Adding anything to null gives null       |    Yes     |
+| Multiplying null by zero gives null      |    Yes     |
+| nulls are distinct in a UNIQUE column    |    Yes     |
+| nulls are distinct in SELECT DISTINCT    |     No     |
+| nulls are distinct in a UNION            |     No     |
+| "CASE WHEN null THEN 1 ELSE 0 END" is 0? |    Yes     |
+| "null OR true" is true                   |    Yes     |
+| "not (null AND false)" is true           |    Yes     |
 
+例如，
 
+nulls are distinct是否定的，那么当Table1左连接Table2时，Table2数据并非一一对应Table1，则会发生当GROUP BY时，结果集中的数据被认为是相同的，因为Table2的列左连接不存在时默认为NULL。
 
+Table1如下所示：
 
+| ID   | NAME   | AGE  |
+| ---- | ------ | ---- |
+| 001  | 唐炜   | 39   |
+| 002  | 章文宣 | 38   |
+| 003  | 唐铭翰 | 9    |
+| 004  | 唐缘卿 | 1    |
 
+Table2如下所示：
 
+| ID   | GAME      | YEARS |
+| ---- | --------- | ----- |
+| 001  | WarCraft3 | 8     |
+| 001  | StarCraft | 12    |
+| 003  | MiniWorld | 4     |
 
+那么想统计每个人有多少喜欢的游戏时：
 
+```sqlite
+SELECT
+	NAME, AGE, COUNT(GAME)
+FROM Table1
+LEFT JOIN Table2 ON (Table1.ID = Table2.ID)
+GROUP BY Table2.ID
+```
 
+会得到如下结果集：
 
+| NAME   | AGE  | COUNT(GAME) |
+| ------ | ---- | ----------- |
+| 唐炜   | 39   | 2           |
+| 章文宣 | 38   | 0           |
+| 唐铭翰 | 9    | 1           |
+
+`唐缘卿`的数据行丢失
 
 
 
