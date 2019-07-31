@@ -4057,6 +4057,44 @@ GROUP BY Table2.ID
 
 `唐缘卿`的数据行丢失
 
+## 1.44、`ON CONFLICT`语句
+
+![](files/conflict-clause.gif)
+
+ON CONFLICT子句是SQLite特有的非标准扩展，可以出现在许多其他SQL命令中。
+
+ON CONFLICT子句的语法如上所示，用于CREATE TABLE命令。 对于INSERT和UPDATE命令，关键字“ON CONFLICT”将替换为“OR”，以便语法更自然地读取。 例如，我们有“INSERT OR IGNORE”而不是“INSERT ON CONFLICT IGNORE”。 关键字会改变，但该子句的含义无论如何都是相同的。
+
+ON CONFLICT子句适用于UNIQUE，NOT NULL，CHECK和PRIMARY KEY约束。 ON CONFLICT算法不适用于FOREIGN KEY约束。 有五种冲突解决算法选择：ROLLBACK，ABORT，FAIL，IGNORE和REPLACE。 默认冲突解决算法是ABORT。
+
+- **ROLLBACK**
+
+  当发生适用的约束冲突时，ROLLBACK解析算法将使用SQLITE_CONSTRAINT错误中止当前SQL语句并回滚当前事务。 如果没有事务处于活动状态（除了在每个命令上创建的隐含事务之外），则ROLLBACK解析算法的工作方式与ABORT算法相同。
+
+- **ABORT**
+
+  当发生适用的约束冲突时，ABORT解析算法将使用SQLITE_CONSTRAINT错误中止当前SQL语句，并撤消当前SQL语句所做的任何更改; 但保留同一事务中先前SQL语句引起的更改，并且事务保持活动状态。 这是SQL标准指定的默认行为和行为。
+
+- **FAIL**
+
+  当发生适用的约束冲突时，FAIL解析算法将使用SQLITE_CONSTRAINT错误中止当前的SQL语句。 但是，FAIL解决方案不会撤消先前更改的SQL语句的更改，也不会结束事务。 例如，如果UPDATE语句在尝试更新的第100行遇到约束违规，则会保留前99行更改，但不会发生对行100及更高行的更改。
+
+  FAIL行为仅适用于唯一性，NOT NULL和CHECK约束。 外键约束违规导致ABORT。
+
+- **IGNORE**
+
+  当发生适用的约束冲突时，IGNORE解析算法会跳过包含约束违规的一行，并继续处理SQL语句的后续行，就像没有出错一样。 包含约束违例的行之前和之后的其他行将正常插入或更新。 使用IGNORE冲突解决算法时，不会返回唯一性，NOT NULL和UNIQUE约束错误的错误。 但是，对于外键约束错误，IGNORE冲突解决算法的工作方式类似于ABORT。
+
+- **REPLACE**
+
+  当发生UNIQUE或PRIMARY KEY约束违规时，REPLACE算法会删除在插入或更新当前行之前导致约束违规的预先存在的行，并且命令继续正常执行。 如果发生NOT NULL约束冲突，则REPLACE冲突解决方案将NULL值替换为该列的默认值，或者如果列没有默认值，则使用ABORT算法。 如果发生CHECK约束或外键约束违规，则REPLACE冲突解决算法的工作方式与ABORT类似。
+
+  当REPLACE冲突解决策略删除行以满足约束时，当且仅当启用了递归触发器时，删除触发器才会触发。
+
+  对于REPLACE冲突解决策略删除的行，不会调用update挂钩。 REPLACE也不会增加变更计数器。 本段中定义的异常行为可能会在将来的版本中发生变化。
+
+
+
 
 
 
