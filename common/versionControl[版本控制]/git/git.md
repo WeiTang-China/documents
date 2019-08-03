@@ -91,6 +91,8 @@ mergetool的配置在.gitconfig中修改，如下所示（注意缩进）：
 
 属性`direct.push`被用来指示是否不采用gerrit中转提交
 
+尽可能的配置user.name，比如`wei.tang@teddy.dell`，或者`wei.tang@self.iMac#BaoAnHome`
+
 
 
 ## 2.3、使用alias增强git log输出
