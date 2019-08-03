@@ -89,6 +89,8 @@ mergetool的配置在.gitconfig中修改，如下所示（注意缩进）：
 - **linux**
       `/home/mine/bin/`
 
+属性`direct.push`被用来指示是否不采用gerrit中转提交
+
 
 
 ## 2.3、使用alias增强git log输出
