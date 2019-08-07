@@ -44,7 +44,7 @@ import urllib.request,os; pf = 'Package Control.sublime-package'; ipp = sublime.
 |          |           |                                         |
 | 代码     | Ctrl + R  | 搜索指定文件的函数标签                  |
 |          |           |                                         |
-|          | Ctrl + P  | 搜索项目中的文件                        |
+| 文件     | Ctrl + P  | 搜索项目中的文件                        |
 |          |           |                                         |
 |          |           |                                         |
 |          |           |                                         |
