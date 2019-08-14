@@ -288,7 +288,7 @@ Activity向Fragment传递数据比较简单，获取Fragment对象，并调用Fr
 
 由于Fragment之间是没有任何依赖关系的，因此如果要进行Fragment之间的通信，建议通过Activity作为中介，不要Fragment之间直接通信。
 
-## DialogFragment
+# DialogFragment
 
 DialogFragment是Android 3.0提出的，代替了Dialog，用于实现对话框。他的优点是：即使旋转屏幕，也能保留对话框状态。
 如果要自定义对话框样式，只需要继承DialogFragment，并重写onCreateView()，该方法返回对话框UI。这里我们举个例子，实现进度条样式的圆角对话框。
@@ -305,9 +305,9 @@ DialogFragment是Android 3.0提出的，代替了Dialog，用于实现对话框�
 
 
 
-## ViewPager+Fragment相关
+# ViewPager+Fragment相关
 
-### 基本使用
+## 基本使用
 
 ViewPager是support v4库中提供界面滑动的类，继承自ViewGroup。PagerAdapter是ViewPager的适配器类，为ViewPager提供界面。但是一般来说，通常都会使用PagerAdapter的两个子类：FragmentPagerAdapter和FragmentStatePagerAdapter作为ViewPager的适配器，他们的特点是界面是Fragment。
 
@@ -323,7 +323,7 @@ ViewPager是support v4库中提供界面滑动的类，继承自ViewGroup。Page
 - void destroyItem(ViewGroup container, int position, Object object): container是ViewPager对象，object是Fragment对象。
 - getItemPosition(Object object): object是Fragment对象，如果返回POSITION_UNCHANGED，则表示当前Fragment不刷新，如果返回POSITION_NONE，则表示当前Fragment需要调用destroyItem()和instantiateItem()进行销毁和重建。 默认情况下返回POSITION_UNCHANGED。
 
-### 懒加载
+## 懒加载
 
 懒加载主要用于ViewPager且每页是Fragment的情况，场景为微信主界面，底部有4个tab，当滑到另一个tab时，先显示”正在加载”，过一会才会显示正常界面。
  默认情况，ViewPager会缓存当前页和左右相邻的界面。实现懒加载的主要原因是：用户没进入的界面需要有一系列的网络、数据库等耗资源、耗时的操作，预先做这些数据加载是不必要的。
@@ -354,9 +354,346 @@ ViewPager是support v4库中提供界面滑动的类，继承自ViewGroup。Page
 
 
 
+# 一些常见的坑
 
+## getActivity()空指针
 
+可能你遇到过getActivity()返回null，或者平时运行完好的代码，在“内存重启”之后，调用getActivity()的地方却返回null，报了空指针异常。
 
+大多数情况下的原因：你在调用了getActivity()时，当前的Fragment已经`onDetach()`了宿主Activity。
+ 比如：你在pop了Fragment之后，该Fragment的异步任务仍然在执行，并且在执行完成后调用了getActivity()方法，这样就会空指针。
+
+### 解决办法：
+
+ **更"安全"的方法**：(对于Fragment已经onDetach这种情况，我们应该避免在这之后再去调用宿主Activity对象，比如取消这些异步任务，但我们的团队可能会有粗心大意的情况，所以下面给出的这个方案会保证安全)
+
+在Fragment基类里设置一个Activity mActivity的全局变量，在`onAttach(Activity activity)`里赋值，使用mActivity代替`getActivity()`，保证Fragment即使在`onDetach`后，仍持有Activity的引用（有引起内存泄露的风险，但是异步任务没停止的情况下，本身就可能已内存泄漏，相比Crash，这种做法“安全”些），即：
+
+```java
+protected Activity mActivity;
+@Override
+public void onAttach(Activity activity) {
+    super.onAttach(activity);
+    this.mActivity = activity;
+}
+
+/**
+*  如果你用了support 23的库，上面的方法会提示过时，有强迫症的小伙伴，可以用下面的方法代替
+*/
+@Override
+public void onAttach(Context context) {
+    super.onAttach(context);
+    this.mActivity = (Activity)context;
+}
+```
+
+## 异常：Can not perform this action after onSaveInstanceState
+
+有很多小伙伴遇到这个异常，这个异常产生的原因是：
+
+在你离开当前Activity等情况下，系统会调用`onSaveInstanceState()`帮你保存当前Activity的状态、数据等，**直到再回到该Activity之前（onResume()之前），你执行Fragment事务，就会抛出该异常！**（一般是其他Activity的回调让当前页面执行事务的情况，会引发该问题）
+
+### 解决方法：
+
+- **1、该事务使用commitAllowingStateLoss()方法提交，但是有可能导致该次提交无效！（宿主Activity被强杀时）**
+
+> 对于`popBackStack()`没有对应的`popBackStackAllowingStateLoss()`方法，所以可以在下次可见时提交事务，参考2
+
+- **2、利用onActivityForResult()/onNewIntent()，可以做到事务的完整性，不会丢失事务**
+
+一个简单的示例代码 ：
+
+```java
+// ReceiverActivity 或 其子Fragment:
+void start(){
+   startActivityForResult(new Intent(this, SenderActivity.class), 100);
+}
+
+@Override
+protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+     super.onActivityResult(requestCode, resultCode, data);
+     if (requestCode == 100 && resultCode == 100) {
+         // 执行Fragment事务
+     }
+ }
+
+// SenderActivity 或 其子Fragment:
+void do() { // 操作ReceiverActivity（或其子Fragment）执行事务
+    setResult(100);
+    finish();
+}
+```
+
+## Fragment重叠异常-----正确使用hide、show的姿势
+
+在类`onCreate()`的方法加载Fragment，并且没有判断`saveInstanceState==null`或`if(findFragmentByTag(mFragmentTag) == null)`，导致重复加载了同一个Fragment导致重叠。（PS：`replace`情况下，如果没有加入回退栈，则不判断也不会造成重叠，但建议还是统一判断下）
+
+```
+@Override 
+protected void onCreate(@Nullable Bundle savedInstanceState) {
+// 在页面重启时，Fragment会被保存恢复，而此时再加载Fragment会重复加载，导致重叠 ;
+    if(saveInstanceState == null){
+    // 或者 if(findFragmentByTag(mFragmentTag) == null)
+       // 正常情况下去 加载根Fragment 
+    } 
+}
+```
+
+详细原因：[从源码角度分析，为什么会发生Fragment重叠？](https://www.jianshu.com/p/78ec81b42f92)
+
+如果你`add()`了几个Fragment，使用`show()、hide()`方法控制，比如微信、QQ的底部tab等情景，如果你什么都不做的话，在“内存重启”后回到前台，app的这几个Fragment界面会重叠。
+
+原因是FragmentManager帮我们管理Fragment，当发生“内存重启”，他会从栈底向栈顶的顺序一次性恢复Fragment； 但是因为官方没有保存Fragment的mHidden属性，默认为false，即show状态，所以所有Fragment都是以show的形式恢复，我们看到了界面重叠。 （如果是`replace`，恢复形式和Activity一致，只有当你pop之后上一个Fragment才开始重新恢复，所有使用`replace`不会造成重叠现象）
+
+> v4-24.0.0+ 开始，官方修复了上述 没有保存mHidden的问题，所以如果你在使用24.0.0+的v4包，下面分析的2个解决方案可以自行跳过...
+
+### 解决方案：
+
+ 1、是大家比较熟悉的 findFragmentByTag：
+
+即在`add()`或者`replace()`时绑定一个tag，一般我们是用fragment的类名作为tag，然后在发生“内存重启”时，通过`findFragmentByTag`找到对应的Fragment，并`hide()`需要隐藏的fragment。
+
+下面是个标准恢复写法：
+
+```
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity);
+
+    TargetFragment targetFragment;
+    HideFragment hideFragment;
+  
+    if (savedInstanceState != null) {  // “内存重启”时调用
+        targetFragment = getSupportFragmentManager().findFragmentByTag(TargetFragment.class.getName);
+        hideFragment = getSupportFragmentManager().findFragmentByTag(HideFragment.class.getName);
+        // 解决重叠问题
+        getFragmentManager().beginTransaction()
+                .show(targetFragment)
+                .hide(hideFragment)
+                .commit();
+    }else{  // 正常时
+        targetFragment = TargetFragment.newInstance();
+        hideFragment = HideFragment.newInstance();
+
+        getFragmentManager().beginTransaction()
+                .add(R.id.container, targetFragment, targetFragment.getClass().getName())
+                .add(R.id,container,hideFragment,hideFragment.getClass().getName())
+                .hide(hideFragment)
+                .commit();
+    }
+}
+```
+
+如果你想恢复到用户离开时的那个Fragment的界面，你还需要在`onSaveInstanceState(Bundle outState)`里保存离开时的那个可见的tag或下标，在`onCreate`“内存重启”代码块中，取出tag/下标，进行恢复。
+
+2、帖子作者的解决方案，9行代码解决所有情况的Fragment重叠：[传送门](https://www.jianshu.com/p/c12a98a36b2b)
+
+## Fragment嵌套的那些坑
+
+其实一些小伙伴遇到的很多嵌套的坑，大部分都是由于对嵌套的栈视图产生混乱，只要理清栈视图关系，做好恢复相关工作以及正确选择是使用`getFragmentManager()`还是`getChildFragmentManager()`就可以避免这些问题。
+
+这部分内容是我们感觉Fragment非常难用的一个点，我会在[下一篇](https://www.jianshu.com/p/fd71d65f0ec6)中，详细介绍使用Fragment嵌套的一些技巧，以及如何清晰分析各个层级的栈视图。
+
+附：startActivityForResult接收返回问题
+ 在support 23.2.0以下的支持库中，对于在嵌套子Fragment的`startActivityForResult ()`，会发现无论如何都不能在`onActivityResult()`中接收到返回值，只有最顶层的父Fragment才能接收到，这是一个support v4库的一个BUG，不过在前两天发布的support 23.2.0库中，已经修复了该问题，嵌套的子Fragment也能正常接收到返回数据了!
+
+## 未必靠谱的出栈方法remove()
+
+如果你想让某一个Fragment出栈，使用`remove()`在加入回退栈时并不靠谱。
+
+如果你在add的同时将Fragment加入回退栈：addToBackStack(name)的情况下，它并不能真正将Fragment从栈内移除，如果你在2秒后（确保Fragment事务已经完成）打印`getSupportFragmentManager().getFragments()`，会发现该Fragment依然存在，并且依然可以返回到被remove的Fragment，而且是空白页面。
+
+如果你没有将Fragment加入回退栈，remove方法可以正常出栈。
+
+如果你加入了回退栈，`popBackStack()`系列方法才能真正出栈，这也就引入下一个深坑，`popBackStack(String tag,int flags)`等系列方法的BUG。
+
+## 多个Fragment同时出栈的深坑BUG
+
+> **6月17日更新： 在support-25.4.0版本，google意识到下面的问题，并修复了。 如果你使用25.4.0及以上版本，下面的方法不要再使用，google移除了mAvailIndices属性**
+
+在Fragment库中如下4个方法是可能产生BUG的：
+
+1、popBackStack(String tag,int flags)
+ 2、popBackStack(int id,int flags)
+ 3、popBackStackImmediate(String tag,int flags)
+ 4、popBackStackImmediate(int id,int flags)
+
+上面4个方法作用是，出栈到tag/id的fragment，即一次多个Fragment被出栈。
+
+**1、FragmentManager栈中管理fragment下标位置的数组ArrayList<Integer> mAvailIndeices的BUG**
+
+下面的方法FragmentManagerImpl类方法，产生BUG的罪魁祸首是管理Fragment栈下标的`mAvailIndeices`属性：
+
+```
+void makeActive(Fragment f) {
+      if (f.mIndex >= 0) {
+         return;
+      } 
+      if (mAvailIndices == null || mAvailIndices.size() <= 0) {
+           if (mActive == null) {
+              mActive = new ArrayList<Fragment>();
+           } 
+           f.setIndex(mActive.size(), mParent); 
+           mActive.add(f);
+       } else {
+           f.setIndex(mAvailIndices.remove(mAvailIndices.size()-1), mParent);
+           mActive.set(f.mIndex, f);
+       } 
+      if (DEBUG) Log.v(TAG, "Allocated fragment index " + f);
+ }
+```
+
+上面代码最终导致了栈内顺序不正确的问题，如下图：
+
+![img](files/fragment/937851-8f0337f08a9d380b.webp)
+
+上面的这个情况，会一次异常，一次正常。带来的问题就是“内存重启”后，各种异常甚至Crash。
+
+发现这BUG的时候，我一脸懵比，幸好，stackoverflow上有大神给出了[解决方案](https://link.jianshu.com?t=http%3A%2F%2Fstackoverflow.com%2Fquestions%2F25520705%2Fandroid-cant-retain-fragments-that-are-nested-in-other-fragments)！hack `FragmentManagerImpl`的`mAvailIndices`，对其进行一次`Collections.reverseOrder()`降序排序，保证栈内Fragment的index的正确。
+
+```java
+public class FragmentTransactionBugFixHack {
+
+  public static void reorderIndices(FragmentManager fragmentManager) {
+    if (!(fragmentManager instanceof FragmentManagerImpl))
+      return;
+    FragmentManagerImpl fragmentManagerImpl = (FragmentManagerImpl) fragmentManager;
+    if (fragmentManagerImpl.mAvailIndices != null && fragmentManagerImpl.mAvailIndices.size() > 1) {
+      Collections.sort(fragmentManagerImpl.mAvailIndices, Collections.reverseOrder());
+    }
+  }
+}
+```
+
+使用方法就是通过`popBackStackImmediate(tag/id)`多个Fragment后，调用
+
+```java
+hanler.post(new Runnable(){
+    @Override
+     public void run() {
+         FragmentTransactionBugFixHack.reorderIndices(fragmentManager));
+     }
+});
+```
+
+**2、popBackStack的坑**
+ `popBackStack`和`popBackStackImmediate`的区别在于前者是加入到主线队列的末尾，等其它任务完成后才开始出栈，后者是队列内的任务立即执行，再将出栈任务放到队列尾（可以理解为立即出栈）。
+
+如果你`popBackStack`多个Fragment后，紧接着`beginTransaction()` add新的一个Fragment，接着发生了“内存重启”后，你再执行`popBackStack()`，app就会Crash，解决方案是postDelay出栈动画时间再执行其它事务，但是根据我的观察不是很稳定。
+
+建议是：如果你想出栈多个Fragment，你应尽量使用`popBackStackImmediate(tag/id)`，而不是`popBackStack(tag/id)`，如果你想在出栈后，立刻`beginTransaction()`开始一项事务，你应该把事务的代码post/postDelay到主线程的消息队列里，下一篇有详细描述。
+
+## 深坑 Fragment转场动画（仅分析v4包下的Fragment）
+
+如果你的Fragment没有转场动画，或者使用`setCustomAnimations(enter, exit)`的话，那么上面的那些坑解决后，你可以愉快的玩耍了。
+
+```java
+getFragmentManager().beginTransaction()
+         .setCustomAnimations(enter, exit)
+        // 如果你有通过tag/id同时出栈多个Fragment的情况时，
+        // 请谨慎使用.setCustomAnimations(enter, exit, popEnter, popExit)  
+        // 在support-25.4.0之前出栈多Fragment时，伴随出栈动画，会在某些情况下发生异常
+        // 你需要搭配Fragment的onCreateAnimation()临时取消出栈动画，或者延迟一个动画时间再执行一次上面提到的Hack方法，排序
+```
+
+**(注意：如果你想给下一个Fragment设置进栈动画和出栈动画，.setCustomAnimations(enter, exit)只能设置进栈动画，第二个参数并不是设置出栈动画； 请使用.setCustomAnimations(enter, exit, popEnter, popExit)，这个方法的第1个参数对应进栈动画，第4个参数对应出栈动画，所以是.setCustomAnimations(进栈动画, exit, popEnter, 出栈动画))**
+
+总结起来就是Fragment没有出栈动画的话，可以避免很多坑。
+ 如果想让出栈动画运作正常的话，需要使用Fragment的`onCreateAnimation`中控制动画。
+
+```java
+@Override
+public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
+    // 此处设置动画
+}
+```
+
+但是用代价也是有的，你需要解决出栈动画带来的几个坑。
+
+**1、pop多个Fragment时转场动画 带来的问题**
+
+> 6月17日更新： 在support-25.4.0版本，google意识到下面动画引起的问题，并修复了。
+
+在使用 `pop(tag/id)`出栈多个Fragment的这种情况下，将转场动画临时取消或者延迟一个动画的时间再去执行其他事务；
+
+原因在于这种情景下，可能会导致栈内顺序错乱（上文有提到），同时如果发生“内存重启”后，因为Fragment转场动画没结束时再执行其他方法，会导致Fragment状态不会被FragmentManager正常保存下来。
+
+**2、进入新的Fragment并立刻关闭当前Fragment 时的一些问题**
+ （1）如果你想从当前Fragment进入一个新的Fragment，并且同时要关闭当前Fragment。由于数据结构是栈，所以正确做法是先`pop`，再`add`，但是转场动画会有覆盖的不正常现象，你需要特殊处理，不然会闪屏！
+
+**Tip：**
+ **如果你遇到Fragment的mNextAnim空指针的异常（通常是在你的Fragment被重启的情况下），那么你首先需要检查是否操作的Fragment是否为null；其次在你的Fragment转场动画还没结束时，你是否就执行了其他事务等方法；解决思路就是延迟一个动画时间再执行事务，或者临时将该Fragment设为无动画**
+
+## add(), show(), hide(), replace()的那点事
+
+**1、区别**
+ `show()`，`hide()`最终是让Fragment的View `setVisibility`(true还是false)，不会调用生命周期；
+
+`replace()`的话会销毁视图，即调用onDestoryView、onCreateView等一系列生命周期；
+
+`add()`和 `replace()`不要在同一个阶级的FragmentManager里混搭使用。
+
+**2、使用场景**
+ 如果你有一个很高的概率会再次使用当前的Fragment，建议使用`show()`，`hide()`，可以提高性能。
+
+在我使用Fragment过程中，大部分情况下都是用`show()`，`hide()`，而不是`replace()`。
+
+注意：如果你的app有大量图片，这时更好的方式可能是replace，配合你的图片框架在Fragment视图销毁时，回收其图片所占的内存。
+
+**3、onHiddenChanged的回调时机**
+ 当使用`add()`+`show()，hide()`跳转新的Fragment时，旧的Fragment回调`onHiddenChanged()`，不会回调`onStop()`等生命周期方法，而新的Fragment在创建时是不会回调`onHiddenChanged()`，这点要切记。
+
+**4、Fragment重叠问题**
+ 使用`show()`，`hide()`带来的一个问题就是，如果你不做任何额外处理，在“内存重启”后，Fragment会重叠；（该BUG在support-v4 24.0.0+以上 官方已修复）
+
+有些小伙伴可能就是为了避免Fragment重叠问题，而选择使用`replace()`，但是使用`show()`，`hide()`时，重叠问题很简单解决的：
+
+- 如果你在用24.0.0+的版本，不需要特殊处理，官方已经修复该BUG；
+- 如果你在使用小于24.0.0以下的v4包，可以参考[9行代码让你App内的Fragment对重叠说再见](https://www.jianshu.com/p/c12a98a36b2b)
+
+## 关于FragmentManager你需要知道的
+
+**FragmentManager栈视图:**
+ （1）每个Fragment以及宿主Activity(继承自FragmentActivity)都会在创建时，初始化一个FragmentManager对象，处理好Fragment嵌套问题的关键，就是理清这些不同阶级的栈视图。
+
+下面给出一个简要的**关系图**：
+
+![img](files/fragment/937851-6e0b034db7df7199.webp)
+
+（2）对于宿主Activity，`getSupportFragmentManager()`获取的FragmentActivity的FragmentManager对象;
+
+对于Fragment，`getFragmentManager()`是获取的是父Fragment(如果没有，则是FragmentActivity)的FragmentManager对象，而`getChildFragmentManager()`是获取自己的FragmentManager对象。
+
+## 使用FragmentPagerAdapter+ViewPager的注意事项
+
+- 使用FragmentPagerAdapter+ViewPager时，切换回上一个Fragment页面时（已经初始化完毕），不会回调任何生命周期方法以及`onHiddenChanged()`，只有`setUserVisibleHint(boolean isVisibleToUser)`会被回调，所以如果你想进行一些懒加载，需要在这里处理。
+- 在给ViewPager绑定FragmentPagerAdapter时，
+   `new FragmentPagerAdapter(fragmentManager)`的FragmentManager，一定要保证正确，如果ViewPager是Activity内的控件，则传递`getSupportFragmentManager()`，如果是Fragment的控件中，则应该传递`getChildFragmentManager()`。只要记住ViewPager内的Fragments是当前组件的子Fragment这个原则即可。
+- 你不需要考虑在“内存重启”的情况下，去恢复的Fragments的问题，因为FragmentPagerAdapter已经帮我们处理啦。
+
+## 是使用单Activity＋多Fragment的架构，还是多模块Activity＋多Fragment的架构？
+
+**单Activity＋多Fragment：**
+一个app仅有一个Activity，界面皆是Frament，Activity作为app容器使用。
+
+优点：性能高，速度最快。参考：新版知乎 、google系app
+
+缺点：逻辑比较复杂，尤其当Fragment之间联动较多或者嵌套较深时，比较复杂。
+
+**多模块Activity＋多Fragment：**
+一个模块用一个Activity，比如
+1、登录注册流程：
+LoginActivity + 登录Fragment + 注册Fragment + 填写信息Fragment ＋ 忘记密码Fragment
+2、或者常见的数据展示流程：
+DataActivity + 数据列表Fragment + 数据详情Fragment ＋ ...
+
+优点：速度快，相比较单Activity+多Fragment，更易维护。
+
+**观点：**
+权衡利弊，我认为多模块Activity＋多Fragment是最合适的架构，开发起来不是很复杂，app的性能又很高效。
+
+当然。**Fragment只是官方提供的灵活组件，请优先遵从你的项目设计！**真的特别复杂的界面，或者单个Activity就可以完成一个流程的界面，使用Activity可能是更好的方案。
 
 
 
