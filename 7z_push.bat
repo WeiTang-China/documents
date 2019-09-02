@@ -11,6 +11,7 @@ if %errorlevel% NEQ 0 (
 	goto safety_exit
 )
 adb push ..\%curDirName%.7z /sdcard/tangwei/
+del ..\%curDirName%.7z
 
 :safety_exit
 pause
