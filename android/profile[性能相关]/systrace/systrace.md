@@ -1,6 +1,6 @@
 [TOC]
 
-# 官方文档
+# 官方文档: systrace简介
 
 ## Overview of Systrace
 
@@ -566,11 +566,14 @@ void init_threads() {
 
 
 
+# 经验 & 总结
 
+## 如何抓取systrace日志？
 
+官方介绍了两种方式：
 
-
-
+- 命令行，需要安装python，[Capture a system trace on the command line](#Capture a system trace on the command line)
+- 手机终端上运行：[Record a system trace](#Record a system trace)；通过ADB下载报告：[Download report using ADB](#Download report using ADB)
 
 
 
@@ -602,4 +605,5 @@ void init_threads() {
 
 # References
 
-- [官方文档](https://developer.android.google.cn/studio/profile/systrace)
+- [官方文档: systrace简介](https://developer.android.google.cn/studio/profile/systrace)
+- [官方文档: 了解 Systrace](https://source.android.google.cn/devices/tech/debug/systrace)
