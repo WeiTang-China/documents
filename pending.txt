@@ -1,2 +1,11 @@
 google官方guava工具包https://github.com/google/guava
-windows的bat输入参数枚举、mklink用法
+
+谷歌源码提供的工具：arm-linux-androideabi-readelf：
+	https://www.cnblogs.com/tocy/p/android-crash_decompile-tool-cmd.html
+
+linux的/proc下的statm、maps、memmap 内存信息文件分析：https://blog.csdn.net/unbutun/article/details/4901800
+Android漫游记(1)---内存映射镜像(memory maps)：https://blog.csdn.net/lifeshow/article/details/29174457
+Android漫游记(2)---ELF可执行文件格式：https://blog.csdn.net/lifeshow/article/details/29198107
+Android漫游记(3)---重定位之GOT & PLT & R_ARM_JUMP_SLOT：https://blog.csdn.net/lifeshow/article/details/29597401
+Android漫游记(4)---.so文件动态调试一例：https://blog.csdn.net/lifeshow/article/details/32914081
+Android漫游记(5)---ARM GCC 内联汇编烹饪书（附实例分析）：https://blog.csdn.net/lifeshow/article/details/33725919
