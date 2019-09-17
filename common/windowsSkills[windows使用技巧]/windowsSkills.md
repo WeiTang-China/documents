@@ -50,6 +50,8 @@
 
   因此我们常见的命令大多是`@echo off`
 
+  ^转义字符，可用来在echo中处理不可显示的字符
+
 - **pause**
 
   `pause` 运行此句会暂停批处理的执行并在屏幕上显示Press any key to continue...的提示，等待用户按任意键后继续
