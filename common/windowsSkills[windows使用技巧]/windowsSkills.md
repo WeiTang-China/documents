@@ -353,7 +353,7 @@ pushd %~p0 & for %%i in (.) do set curDirName=%%~ni
 echo %curDirName%
 ```
 
-## 2.5、判断输入参数是否目录
+## 2.5、判断输入参数是否目录（原创）
 
 ```powershell
 SET a1=%~a1
@@ -364,7 +364,34 @@ if "%a1:~0,1%"=="d" (
 )
 ```
 
+## 2.6、获取文件摘要值
 
+```powershell
+用法:
+  CertUtil [选项] -hashfile InFile [HashAlgorithm]
+  通过文件生成并显示加密哈希
+
+选项:
+  -Unicode          -- 以 Unicode 编写重定向输出
+  -gmt              -- 将时间显示为 GMT
+  -seconds          -- 用秒和毫秒显示时间
+  -v                -- 详细操作
+  -privatekey       -- 显示密码和私钥数据
+  -pin PIN                  -- 智能卡 PIN
+  -sid WELL_KNOWN_SID_TYPE  -- 数字 SID
+            22 -- 本地系统
+            23 -- 网络服务
+            24 -- 本地服务
+
+哈希算法: MD2 MD4 MD5 SHA1 SHA256 SHA384 SHA512
+
+CertUtil -?              -- 显示动词列表(命名列表)
+CertUtil -hashfile -?    -- 显示 "hashfile" 动词的帮助文本
+CertUtil -v -?           -- 显示所有动词的所有帮助文本
+
+例如：
+certutil -hashfile xxx.zip md5
+```
 
 
 
