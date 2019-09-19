@@ -1,4 +1,4 @@
-# 1、查找
+# 1、奇技淫巧
 
 ## 1.1、如何查看某个端口被谁占用
 
@@ -29,6 +29,16 @@
 3、点击“CPU”选项卡，在“关联的句柄”右侧的“搜索句柄”输入框输入文件名或文件夹名并点击搜索
 
 ![](files\file_usage.png)
+
+## 1.3、创建虚拟磁盘，并开机自动挂载
+
+创建虚拟磁盘，请参考：https://baijiahao.baidu.com/s?id=1593639343585742495&wfr=spider&for=pc
+
+使用磁盘管理完成，创建完空白VHD后，点击左边的名称格式化，再右键完成初始化
+
+开机自动挂载，请参考：[如何在 Windows 10、Windows 8 启动时自动装载 VHD](https://gallery.technet.microsoft.com/scriptcenter/How-to-automatically-mount-d623ce34)
+
+如果遇到ps1执行权限问题，请参考：[3.1、ps脚本无权限执行](#3.1、ps脚本无权限执行)
 
 
 
@@ -425,6 +435,27 @@ certutil -hashfile xxx.zip md5
 ```
 
 
+
+
+
+
+
+
+
+# 3、Power Shell
+
+## 3.1、ps脚本无权限执行
+
+请参考微软官方文档：[PowerShell Execution Policies](https://docs.microsoft.com/zh-cn/powershell/module/microsoft.powershell.core/about/about_execution_policies?view=powershell-6#powershell-execution-policies)
+
+```powershell
+查询
+Get-ExecutionPolicy -List
+授权
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser
+取消授权
+Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope CurrentUser
+```
 
 
 
