@@ -41,15 +41,34 @@ CUR_BRANCH=${CUR_BRANCH#*/}
 # 第一个:左边的内容，最终取到分支名
 CUR_BRANCH=${CUR_BRANCH%%:*}
 
-DIRECT_PUSH=`git config direct.push`
+PUSH_TYPE=`git config push.type`
 
 # echo "REMOTE_NAME=$REMOTE_NAME; CUR_BRANCH=$CUR_BRANCH; DIRECT_PUSH=$DIRECT_PUSH;"
 
-if [ "$DIRECT_PUSH" = "true" ]
-then
+if [ "$PUSH_TYPE" = "" ] || [ "$PUSH_TYPE" = "direct" ]; then
 	echo "git push $REMOTE_NAME $CUR_BRANCH"
 	git push $REMOTE_NAME $CUR_BRANCH
-else
+elif [ "$PUSH_TYPE" = "gerrit" ]; then
 	echo "git push $REMOTE_NAME HEAD:refs/for/$CUR_BRANCH"
 	git push $REMOTE_NAME HEAD:refs/for/$CUR_BRANCH
+elif [ "$PUSH_TYPE" = "tfs" ]; then
+	read -p "Input your branch name: " self_defined_branch
+	test -z "${self_defined_branch}"
+	if [ -z "${self_defined_branch}" ] ; then
+		echo "[Error] can't be empty"
+		read -p "Input your branch name again: " self_defined_branch
+		if [ -z "${self_defined_branch}" ] ; then
+			echo "bye!"
+			exit -3
+		fi
+	fi
+	echo "git push $REMOTE_NAME $CUR_BRANCH:${self_defined_branch}"
+	git push $REMOTE_NAME $CUR_BRANCH:${self_defined_branch}
+else
+	echo "UNKNOWN push.type=${PUSH_TYPE}!!!"
+	echo "You can set push.type as below:"
+	echo "  direct or unset - git put origin branch_name"
+	echo "  gerrit - git put origin HEAD:refs/for/branch_name"
+	echo "  tfs - git put origin branch_name:self_defined_branch"
+	exit -4
 fi
