@@ -62,8 +62,8 @@ elif [ "$PUSH_TYPE" = "tfs" ]; then
 			exit -3
 		fi
 	fi
-	echo "git push $REMOTE_NAME $CUR_BRANCH:${self_defined_branch}"
-	git push $REMOTE_NAME $CUR_BRANCH:${self_defined_branch}
+	echo "git push --force $REMOTE_NAME $CUR_BRANCH:${self_defined_branch}"
+	git push --force $REMOTE_NAME $CUR_BRANCH:${self_defined_branch}
 else
 	echo "UNKNOWN push.type=${PUSH_TYPE}!!!"
 	echo "You can set push.type as below:"
