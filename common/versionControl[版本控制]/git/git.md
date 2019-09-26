@@ -175,7 +175,15 @@ git config --global --add gui.encoding utf-8
 
    如果是doc文件，把docx换成doc应该也是一样的。
 
+## 2.7、创建本地分支后，让远程分支与它关联
 
+```shell
+git branch --set-upstream-to=origin/remote_branch  your_branch
+```
+
+使用git在本地新建一个分支后，需要做远程分支关联。如果没有关联，git会在下面的操作中提示你显示的添加关联。
+
+关联目的是在执行git pull, git push操作时就不需要指定对应的远程分支，你只要没有显示指定，git pull的时候，就会提示你。
 
 
 
