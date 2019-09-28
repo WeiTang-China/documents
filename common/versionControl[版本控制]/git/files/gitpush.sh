@@ -21,6 +21,18 @@ then
     fi
 fi
 
+while [ "$1" ]; do
+    case "$1" in
+        --force)
+            FORCE_PUSH=" $1"
+            ;;
+        *)
+            echo "[WARN] unknown param:$1"
+            ;;
+    esac
+    shift
+done
+
 # Helper
 # ${string: start :length}	从 string 字符串的左边第 start 个字符开始，向右截取 length 个字符。
 # ${string: start}	从 string 字符串的左边第 start 个字符开始截取，直到最后。
@@ -46,29 +58,29 @@ PUSH_TYPE=`git config push.type`
 # echo "REMOTE_NAME=$REMOTE_NAME; CUR_BRANCH=$CUR_BRANCH; DIRECT_PUSH=$DIRECT_PUSH;"
 
 if [ "$PUSH_TYPE" = "" ] || [ "$PUSH_TYPE" = "direct" ]; then
-	echo "git push $REMOTE_NAME $CUR_BRANCH"
-	git push $REMOTE_NAME $CUR_BRANCH
+    echo "git push $REMOTE_NAME $CUR_BRANCH"
+    git push $REMOTE_NAME $CUR_BRANCH
 elif [ "$PUSH_TYPE" = "gerrit" ]; then
-	echo "git push $REMOTE_NAME HEAD:refs/for/$CUR_BRANCH"
-	git push $REMOTE_NAME HEAD:refs/for/$CUR_BRANCH
+    echo "git push $REMOTE_NAME HEAD:refs/for/$CUR_BRANCH"
+    git push $REMOTE_NAME HEAD:refs/for/$CUR_BRANCH
 elif [ "$PUSH_TYPE" = "tfs" ]; then
-	read -p "Input your branch name: " self_defined_branch
-	test -z "${self_defined_branch}"
-	if [ -z "${self_defined_branch}" ] ; then
-		echo "[Error] can't be empty"
-		read -p "Input your branch name again: " self_defined_branch
-		if [ -z "${self_defined_branch}" ] ; then
-			echo "bye!"
-			exit -3
-		fi
-	fi
-	echo "git push --force $REMOTE_NAME $CUR_BRANCH:${self_defined_branch}"
-	git push --force $REMOTE_NAME $CUR_BRANCH:${self_defined_branch}
+    read -p "Input your branch name: " self_defined_branch
+    test -z "${self_defined_branch}"
+    if [ -z "${self_defined_branch}" ] ; then
+        echo "[Error] can't be empty"
+        read -p "Input your branch name again: " self_defined_branch
+        if [ -z "${self_defined_branch}" ] ; then
+            echo "bye!"
+            exit -3
+        fi
+    fi
+    echo "git push$FORCE_PUSH $REMOTE_NAME $CUR_BRANCH:${self_defined_branch}"
+    git push$FORCE_PUSH $REMOTE_NAME $CUR_BRANCH:${self_defined_branch}
 else
-	echo "UNKNOWN push.type=${PUSH_TYPE}!!!"
-	echo "You can set push.type as below:"
-	echo "  direct or unset - git put origin branch_name"
-	echo "  gerrit - git put origin HEAD:refs/for/branch_name"
-	echo "  tfs - git put origin branch_name:self_defined_branch"
-	exit -4
+    echo "UNKNOWN push.type=${PUSH_TYPE}!!!"
+    echo "You can set push.type as below:"
+    echo "  direct or unset - git put origin branch_name"
+    echo "  gerrit - git put origin HEAD:refs/for/branch_name"
+    echo "  tfs - git put origin branch_name:self_defined_branch"
+    exit -4
 fi

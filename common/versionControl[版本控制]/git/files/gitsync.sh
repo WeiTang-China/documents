@@ -51,14 +51,14 @@ then
     echo "INPUT_BRANCH='$INPUT_BRANCH'"
     if [ "$INPUT_BRANCH" != "" ]
     then
-		# 掐头去尾，去掉最外面的[]
+        # 掐头去尾，去掉最外面的[]
         INPUT_BRANCH=${INPUT_BRANCH:1:`expr ${#INPUT_BRANCH}-2`}
-		# 第一个/左边的是remote名称，一般是origin
-		REMOTE_NAME=${INPUT_BRANCH%%/*}
-		# 第一个/右边的内容，可能是"分支名: ahead 1, behind 4"
-		INPUT_BRANCH=${INPUT_BRANCH#*/}
-		# 第一个:左边的内容，最终取到分支名
-		INPUT_BRANCH=${INPUT_BRANCH%%:*}
+        # 第一个/左边的是remote名称，一般是origin
+        REMOTE_NAME=${INPUT_BRANCH%%/*}
+        # 第一个/右边的内容，可能是"分支名: ahead 1, behind 4"
+        INPUT_BRANCH=${INPUT_BRANCH#*/}
+        # 第一个:左边的内容，最终取到分支名
+        INPUT_BRANCH=${INPUT_BRANCH%%:*}
     else
         INPUT_BRANCH=$1
     fi
