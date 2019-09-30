@@ -1198,6 +1198,34 @@ FROM table_name
 
 您可以在 ORDER BY 子句中使用多个列。确保您使用的排序列在列清单中。
 
+### 1.19.2、官网解释
+
+在https://www.sqlite.org/lang_select.html中搜索`The ORDER BY clause`
+
+如果返回多行的SELECT语句没有ORDER BY子句，则返回行的顺序不确定。
+
+在复合SELECT语句中（复合语句，比如UNION），只有最后一个或最右边的简单SELECT可以具有ORDER BY子句。该ORDER BY子句将应用于该复合SELECT语句的所有元素。如果复合SELECT的最右边的元素是VALUES子句，则该语句上不允许使用ORDER BY子句。
+
+首先根据对ORDER BY列表中最左边的表达式求值的结果对行进行排序，然后通过对第二个最左边的表达式求值来打破关系。未返回所有ORDER BY表达式求值相等的两行的顺序。每个ORDER BY表达式可以可选地后面跟一个关键字ASC（首先返回较小的值）或DESC（首先返回较大的值）之一。如果未指定ASC或DESC，则默认情况下，行按升序排列（首先是较小的值）。
+
+每个ORDER BY表达式的处理如下：
+
+- 如果ORDER BY表达式是常量整数K，则该表达式被视为结果集的第K列的别名（列从1到从左到右编号）。
+- 如果ORDER BY表达式是与输出列之一的别名相对应的标识符，则该表达式被视为该列的别名。
+- 否则，如果ORDER BY表达式是任何其他表达式，则将对其求值并将返回值用于对输出行进行排序。如果SELECT语句是简单的SELECT，则ORDER BY可以包含任何任意表达式。但是，如果SELECT是复合SELECT，则不是输出列别名的ORDER BY表达式必须与用作输出列的表达式完全相同。
+
+为了对行进行排序，将以与比较表达式相同的方式比较值。用于比较两个文本值的排序规则序列确定如下：
+
+- 如果使用后缀COLLATE运算符为ORDER BY表达式分配了排序规则序列，则使用指定的排序规则序列。
+
+- 否则，如果ORDER BY表达式是已使用后缀COLLATE运算符分配了排序规则序列的表达式的别名，则使用分配给别名表达式的排序规则序列。
+
+- 否则，如果ORDER BY表达式是列或表达式的别名（是列），则使用该列的默认排序规则序列。
+
+- 否则，将使用BINARY排序规则序列。
+
+在复合SELECT语句中，所有ORDER BY表达式均作为复合结果列之一的别名处理。如果ORDER BY表达式不是整数别名，则SQLite将在复合SELECT语句中最左边的SELECT中搜索与上述第二或第三条规则匹配的结果列。如果找到匹配项，则搜索将停止，并且将表达式作为已与其匹配的结果列的别名来处理。否则，将尝试右边的下一个SELECT，依此类推。如果在任何组成SELECT的结果列中找不到匹配的表达式，则为错误。 ORDER BY子句的每个术语都单独处理，并且可以与复合物中不同SELECT语句的结果列进行匹配。
+
 
 
 ## 1.20、SQLite Group By
@@ -4129,5 +4157,5 @@ ON CONFLICT子句适用于UNIQUE，NOT NULL，CHECK和PRIMARY KEY约束。 ON CO
 # 3、References
 
 - [官方网站](https://www.sqlite.org/index.html)
-
 - [BUNOOB Sqlite教程](https://www.runoob.com/sqlite/sqlite-tutorial.html)
+- [Blog: 如何建立index优化查询效率](https://mariadb.com/kb/en/library/building-the-best-index-for-a-given-select/)
