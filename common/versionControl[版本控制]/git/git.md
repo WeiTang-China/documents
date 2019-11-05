@@ -89,7 +89,19 @@ mergetool的配置在.gitconfig中修改，如下所示（注意缩进）：
 - **linux**
       `/home/mine/bin/`
 
-属性`direct.push`被用来指示是否不采用gerrit中转提交
+属性`push.type`被用来指示是否不采用gerrit中转提交
+
+- 不配置或者direct
+
+  `git push origin dev`
+
+- gerrit
+
+  `git push origin HEAD:refs/for/dev`
+
+- tfs，可跟参数--force
+
+  `git push --force origin dev:${self_defined_branch}`
 
 尽可能的配置user.name，比如`wei.tang@teddy.dell`，或者`wei.tang@self.iMac#BaoAnHome`
 
