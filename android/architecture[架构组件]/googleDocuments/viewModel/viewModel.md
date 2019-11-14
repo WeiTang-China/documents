@@ -18,8 +18,6 @@ Implement a ViewModel
 
 Architecture Components provides [`ViewModel`](https://developer.android.com/reference/androidx/lifecycle/ViewModel.html) helper class for the UI controller that is responsible for preparing data for the UI. [`ViewModel`](https://developer.android.com/reference/androidx/lifecycle/ViewModel.html) objects are automatically retained during configuration changes so that data they hold is immediately available to the next activity or fragment instance. For example, if you need to display a list of users in your app, make sure to assign responsibility to acquire and keep the list of users to a [`ViewModel`](https://developer.android.com/reference/androidx/lifecycle/ViewModel.html), instead of an activity or fragment, as illustrated by the following sample code:
 
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/viewmodel#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/viewmodel#java)
-
 ```java
 public class MyViewModel extends ViewModel {
     private MutableLiveData<List<User>> users;
@@ -40,8 +38,6 @@ public class MyViewModel extends ViewModel {
 
 
 You can then access the list from an activity as follows:
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/viewmodel#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/viewmodel#java)
 
 ```java
 public class MyActivity extends AppCompatActivity {
@@ -80,8 +76,6 @@ Share data between fragments
 It's very common that two or more fragments in an activity need to communicate with each other. Imagine a common case of master-detail fragments, where you have a fragment in which the user selects an item from a list and another fragment that displays the contents of the selected item. This case is never trivial as both fragments need to define some interface description, and the owner activity must bind the two together. In addition, both fragments must handle the scenario where the other fragment is not yet created or visible.
 
 This common pain point can be addressed by using [`ViewModel`](https://developer.android.com/reference/androidx/lifecycle/ViewModel.html) objects. These fragments can share a [`ViewModel`](https://developer.android.com/reference/androidx/lifecycle/ViewModel.html)using their activity scope to handle this communication, as illustrated by the following sample code:
-
-[KOTLIN](https://developer.android.com/topic/libraries/architecture/viewmodel#kotlin)[JAVA](https://developer.android.com/topic/libraries/architecture/viewmodel#java)
 
 ```java
 public class SharedViewModel extends ViewModel {
