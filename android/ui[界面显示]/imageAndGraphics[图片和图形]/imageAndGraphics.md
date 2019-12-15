@@ -4,20 +4,20 @@
 
 ## Drawables overview
 
-When you need to display static images in your app, you can use the `Drawable` class and its subclasses to draw shapes and images. A `Drawable` is a general abstraction for *something that can be drawn*. The various subclasses help with specific image scenarios, and you can extend them to define your own drawable objects that behave in unique ways.
+当需要在APP中显示静态图像时，可以使用`Drawable`类及其子类来绘制形状和图像。 `Drawable`是*可以绘制*的东西的一般抽象。 各种子类可帮助解决特定的图像场景，您可以扩展它们以定义自己的可绘制对象，这些对象以独特的方式运行。
 
-There are two ways to define and instantiate a `Drawable` besides using the class constructors:
+除了使用类构造函数外，还有两种方法来定义和实例化一个`Drawable`：
 
-- Inflate an image resource (a bitmap file) saved in your project.
-- Inflate an XML resource that defines the drawable properties.
+- inflate保存在项目中的图像资源（bitmap文件）
+- inflate定义在`drawable`属性中的XML资源
 
-**Note:** You might instead prefer using a vector drawable, which defines an image with a set of points, lines, and curves, along with associated color information. This allows vector drawables to be scaled for different sizes without a loss of quality. For more information, see [Vector drawables overview](https://developer.android.com/guide/topics/graphics/vector-drawable-resources.html).
+**Note:** 相反，您可能更喜欢使用矢量可绘制对象，该对象定义具有一组点，线和曲线以及关联的颜色信息的图像。 这样就可以将矢量可绘制对象缩放为不同大小，而不会降低质量。 有关更多信息，请参见[Vector drawables概述](https://developer.android.com/guide/topics/graphics/vector-drawable-resources.html)。
 
 ### Create drawables from resource images
 
-You can add graphics to your app by referencing an image file from your project resources. Supported file types are PNG (preferred), JPG (acceptable), and GIF (discouraged). App icons, logos, and other graphics, such as those used in games, are well suited for this technique.
+您可以通过引用项目资源中的图像文件来向应用程序添加图形。 支持的文件类型为PNG（首选），JPG（可接受）和GIF（不推荐使用）。 应用程序图标，logo和其他图形（例如游戏中使用的图形）非常适合此技术。
 
-To use an image resource, add your file to the `res/drawable/` directory of your project. Once in your project, you can reference the image resource from your code or your XML layout. Either way, it's referred to using a resource ID, which is the file name without the file type extension. For example, refer to `my_image.png` as `my_image`.
+要使用图像资源，请将文件添加到项目的`res/drawable/`目录中。 进入项目后，您可以从代码或XML布局中引用图像资源。 无论哪种方式，都使用资源ID进行引用，资源ID是不带文件类型扩展名的文件名。 例如，将`my_image.png`称为`my_image`。
 
 **Note:** Image resources placed in the `res/drawable/` directory may be automatically optimized with lossless image compression by the `aapt` tool during the build process. For example, a true-color PNG that doesn't require more than 256 colors may be converted to an 8-bit PNG with a color palette. This results in an image of equal quality but which requires less memory. As a result, the image binaries placed in this directory can change at build time. If you plan on reading an image as a bitstream in order to convert it to a bitmap, put your images in the `res/raw/` folder instead, where the `aapt` tool doesn't modify them.
 
