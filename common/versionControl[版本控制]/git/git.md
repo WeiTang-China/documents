@@ -362,7 +362,7 @@ https://www.lzane.com/slide/git-under-the-hood
 
 首先我们先创建两个文件
 
-```
+```shell
 $ git init
 $ echo '111' > a.txt
 $ echo '222' > b.txt
@@ -371,7 +371,7 @@ $ git add *.txt
 
 Git会将整个数据库储存在`.git/`目录下，如果你此时去查看`.git/objects`目录，你会发现仓库里面多了两个object。
 
-```
+```shell
 $ tree .git/objects
 .git/objects
 ├── 58
@@ -384,14 +384,14 @@ $ tree .git/objects
 
 好奇的我们来看一下里面存的是什么东西
 
-```
+```shell
 $ cat .git/objects/58/c9bdf9d017fcd178dc8c073cbfcbb7ff240d6c
 xKOR0a044K%
 ```
 
 怎么是一串乱码？这是因为Git将信息压缩成二进制文件。但是不用担心，因为Git也提供了一个能够帮助你探索它的api `git cat-file [-t] [-p]`， `-t`可以查看object的类型，`-p`可以查看object储存的具体内容。
 
-```
+```shell
 $ git cat-file -t 58c9
 blob
 $ git cat-file -p 58c9
@@ -409,7 +409,7 @@ $ git cat-file -p 58c9
 
 我们继续探索，我们创建一个commit。
 
-```
+```shell
 $ git commit -am '[+] init'
 $ tree .git/objects
 .git/objects
@@ -422,7 +422,7 @@ $ tree .git/objects
 
 我们会发现当我们commit完成之后，Git仓库里面多出来两个object。同样使用`cat-file`命令，我们看看它们分别是什么类型以及具体的内容是什么。
 
-```
+```shell
 $ git cat-file -t 4caaa1
 tree
 $ git cat-file -p 4caaa1
@@ -436,7 +436,7 @@ $ git cat-file -p 4caaa1
 
 ![img](files/git/640-20191215235305489)
 
-```
+```shell
 $ git cat-file -t 0c96bf
 commit
 $ git cat-file -p 0c96bf
@@ -456,7 +456,7 @@ committer lzane 李泽帆  1573302343 +0800
 
 到这里我们就知道Git是怎么储存一个提交的信息的了，那有同学就会问，我们平常接触的分支信息储存在哪里呢？
 
-```
+```shell
 $ cat .git/HEAD
 ref: refs/heads/master
 
@@ -472,7 +472,7 @@ $ cat .git/refs/heads/master
 
 其实还有第四种Git object，类型是tag，在添加含附注的tag（`git tag -a`）的时候会新建，这里不详细介绍，有兴趣的朋友按照上文中的方法可以深入探究。
 
-至此我们知道了Git是什么储存一个文件的内容、目录结构、commit信息和分支的。**其本质上是一个key-value的数据库加上默克尔树形成的有向无环图（DAG）**。这里可以蹭一下区块链的热度，区块链的数据结构也使用了默克尔树。
+至此我们知道了Git是什么储存一个文件的内容、目录结构、commit信息和分支的。**其本质上是一个key-value的数据库加上默克尔树形成的有向无环图（DAG）**。这里可以蹭一下区块链的热度，区块链的数据结构也使用了默克尔树。（[默克尔树的帖子](https://www.cnblogs.com/fengzhiwu/p/5524324.html)）
 
 
 
