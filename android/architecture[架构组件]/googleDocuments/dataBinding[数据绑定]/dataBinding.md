@@ -1308,7 +1308,9 @@ public class Converter {
 
 # Memo备忘
 
+## 1、解决异步调用造成刷新延迟的问题
 
+解决方案：在主线程set变量之后，主线程同步调用`viewBinding.executePendingBindings()`
 
 
 
@@ -1321,6 +1323,4 @@ public class Converter {
 - [官方文档](<https://developer.android.com/topic/libraries/data-binding>)
 - [googleSample: data-bindings](<https://github.com/googlesamples/android-databinding>)
 - [googleSample: MVVM data-bindings](<https://github.com/googlesamples/android-architecture/tree/todo-mvvm-databinding>)
-```
 
-```
