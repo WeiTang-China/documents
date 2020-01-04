@@ -577,11 +577,20 @@ void init_threads() {
 
 
 
+## 解析出来的html，使用chrome打开白屏怎么办？
+
+在chrome中输入chrome://tracing，Load载入解析结果.html
 
 
 
+## 使用systraceParser工具
 
+如files/systraceParser.7z所示，请自行解压使用
 
+注意事项：
+
+1. 如果已安装python3.x，则会解析失败，需要修改bat脚本
+2. 需要配置SDK目录
 
 
 
