@@ -10,4 +10,9 @@ Android漫游记(3)---重定位之GOT & PLT & R_ARM_JUMP_SLOT：https://blog.csdn.net/li
 Android漫游记(4)---.so文件动态调试一例：https://blog.csdn.net/lifeshow/article/details/32914081
 Android漫游记(5)---ARM GCC 内联汇编烹饪书（附实例分析）：https://blog.csdn.net/lifeshow/article/details/33725919
 
-从原生代码借鉴全屏方案
+startingWindow，启动过渡页面
+  在AndroidManifest.xml中给首页activity（第一个页面，一般是欢迎界面）设置自定义的theme
+  在Activity中恢复原有的style样式【否则的话，当activity的布局文件设置背景色为透明的时候，就会发现窗口的背景还是那张图片】
+  扩展：如果在styles.xml文件中将启动页窗口背景图片(android:windowBackground)设置为欢迎界面的背景图片，然后欢迎界面布局文件中将背景(android:background)设置为透明，Activity中不恢复原有的样式，那么这样就可以实现APP启动后白屏部分和欢迎界面是同一张背景图片。
+
+  需要注意，如果将之前欢迎界面的背景图片作为窗口背景图片，那么就需要考虑到底部导航栏的高度的问题。否则背景图片的底部会被遮盖住。所以可能需要重新调整欢迎界面的背景图片。
