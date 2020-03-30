@@ -42,6 +42,20 @@
 
 
 
+## 1.4、robocopy多线程加速拷贝
+
+Windows7版本官方下载地址：[click me](https://www.windows-commandline.com/download-robocopy/)
+
+robocopy维基百科：https://en.wikipedia.org/wiki/Robocopy?spm=a2c4e.10696291.0.0.5a3f19a4F8PMy6
+
+参数列表：https://www.computerhope.com/robocopy.htm
+
+中文博客：https://blog.51cto.com/marui/300470
+
+
+
+
+
 # 2、Bat & Console
 
 ## 2.1、常用命令
