@@ -56,7 +56,7 @@ Android 10 对某些 Android 系统组件进行了模块化处理，使其能够
 
 ### 关于模块化系统组件
 
-利用模块化系统组件，Google 和 Android 合作伙伴能够以非侵入方式广泛、快速、无缝地向最终用户设备分发更新。例如，媒体编解码器碎片和严重错误可能会显著降低应用的采用率和用户互动度。频繁更新媒体相关模块可以减少编解码器碎片，以使媒体应用在不同 Android 设备上的行为更加一致，并且可以修复严重错误，以建立用户信任。
+利用模块化系统组件，Google 和 Android 合作伙伴能够以非侵入方式广泛、快速、无缝地向最终用户设备分发更新。例如，媒体编解码器碎片和严重错可能会显著降低应用的采用率和用户互动度。频繁更新媒体相关模块可以减少编解码器碎片，以使媒体应用在不同 Android 设备上的行为更加一致，并且可以修复严重错误，以建立用户信任。
 
 ### 架构
 
@@ -1336,7 +1336,7 @@ VBoot 2.0 是 [Android 验证启动 (AVB)](https://android.googlesource.com/plat
 4. VBoot 2.0 不支持 `verifyatboot`，无论是否启用了提前装载。
 
 5. 必须在 `kernel_cmdline` 中使用`androidboot.veritymode`选项指定验证分区的真实模式/状态（现有要求）。确保包含以下 AVB 修复程序：
-   
+  
    - https://android-review.googlesource.com/#/q/topic:libavb-api-rev-for-verity-modes+(status:open+OR+status:merged)
    - https://android-review.googlesource.com/#/c/394215/
 
