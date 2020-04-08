@@ -16,3 +16,19 @@ startingWindow，启动过渡页面
   扩展：如果在styles.xml文件中将启动页窗口背景图片(android:windowBackground)设置为欢迎界面的背景图片，然后欢迎界面布局文件中将背景(android:background)设置为透明，Activity中不恢复原有的样式，那么这样就可以实现APP启动后白屏部分和欢迎界面是同一张背景图片。
 
   需要注意，如果将之前欢迎界面的背景图片作为窗口背景图片，那么就需要考虑到底部导航栏的高度的问题。否则背景图片的底部会被遮盖住。所以可能需要重新调整欢迎界面的背景图片。
+
+马士兵视频：《深入IO到EPOLL》
+  nc指令
+  strace查看系统调用；android官方strace指南：https://source.android.google.cn/devices/tech/debug/strace?hl=zh-cn
+	strace本身不依赖于系统，从一个机器拷贝到另一个机器直接能用；可以看到，strace 只依赖三个最基本的库：
+
+	> readelf -a strace | grep NEEDED
+	 0x00000001 (NEEDED)                     Shared library: [libc.so]
+	 0x00000001 (NEEDED)                     Shared library: [libstdc++.so]
+	 0x00000001 (NEEDED)                     Shared library: [libm.so]
+
+	strace一般在/system/xbin/或者/system/bin/下；如果没有呢，可以自己编译一个，或者从其它android手机拷贝一份
+  netstat -natp：n表示禁用域名解析功能；a表示所有；t表示仅查询tcp；p表示显示进程
+  mmap系统调用：
+  sendfile系统调用：0内存拷贝
+
