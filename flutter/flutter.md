@@ -25,3 +25,9 @@ flutter中文网：https://flutterchina.club/
 当marketplace显示`marketplace plugin are not loaded.`时，可能是jetbrarins连接不上，改为https访问试试：
 
 Automatic proxy configuration URL to `https://plugins.jetbrains.com/androidstudio`
+
+
+
+# 进度
+
+https://flutter.dev/docs/get-started/test-drive
