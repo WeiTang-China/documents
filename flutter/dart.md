@@ -702,6 +702,92 @@ void main(List<String> arguments) {
 
 You can use the [args library](https://pub.dev/packages/args) to define and parse command-line arguments.
 
+### Functions as first-class objects
+
+You can pass a function as a parameter to another function. For example:
+
+```dart
+void printElement(int element) {
+  print(element);
+}
+
+var list = [1, 2, 3];
+
+// Pass printElement as a parameter.
+list.forEach(printElement);
+```
+
+You can also assign a function to a variable, such as:
+
+```dart
+var loudify = (msg) => '!!! ${msg.toUpperCase()} !!!';
+assert(loudify('hello') == '!!! HELLO !!!');
+```
+
+This example uses an anonymous function. More about those in the next section.
+
+> 带来方便性的同时，感觉代码的复杂程度增加了不少
+
+### Anonymous functions
+
+Most functions are named, such as `main()` or `printElement()`. You can also create a nameless function called an *anonymous function*, or sometimes a *lambda* or *closure*. You might assign an anonymous function to a variable so that, for example, you can add or remove it from a collection.
+
+An anonymous function looks similar to a named function— zero or more parameters, separated by commas and optional type annotations, between parentheses.
+
+The code block that follows contains the function’s body:
+
+```dart
+([[Type] param1[, …]]) {
+	codeBlock;
+};
+```
+
+The following example defines an anonymous function with an untyped parameter, `item`. The function, invoked for each item in the list, prints a string that includes the value at the specified index.
+
+```dart
+var list = ['apples', 'bananas', 'oranges'];
+list.forEach((item) {
+  print('${list.indexOf(item)}: $item');
+});
+```
+
+If the function contains only one statement, you can shorten it using arrow notation. Paste the following line into DartPad and click **Run** to verify that it is functionally equivalent.
+
+```dart
+list.forEach(
+    (item) => print('${list.indexOf(item)}: $item'));
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
