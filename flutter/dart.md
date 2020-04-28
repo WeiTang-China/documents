@@ -1,8 +1,6 @@
-# 官网资源
+# [A tour of the Dart language](https://dart.dev/guides/language/language-tour)
 
-## [A tour of the Dart language](https://dart.dev/guides/language/language-tour)
-
-### A basic Dart program
+## A basic Dart program
 
 ```dart
 // Define a function.
@@ -51,7 +49,7 @@ A way to declare a variable without specifying its type.
 
 
 
-### Important concepts
+## Important concepts
 
 As you learn about the Dart language, keep these facts and concepts in mind:
 
@@ -758,7 +756,959 @@ list.forEach(
     (item) => print('${list.indexOf(item)}: $item'));
 ```
 
+> 能在同一个上下文处理，就尽量不要匿名方法吧
+>
 
+### Lexical scope
+
+Dart is a lexically scoped language, which means that the scope of variables is determined statically, simply by the layout of the code. You can “follow the curly braces outwards” to see if a variable is in scope.
+
+Here is an example of nested functions with variables at each scope level:
+
+```dart
+bool topLevel = true;
+
+void main() {
+  var insideMain = true;
+
+  void myFunction() {
+    var insideFunction = true;
+
+    void nestedFunction() {
+      var insideNestedFunction = true;
+
+      assert(topLevel);
+      assert(insideMain);
+      assert(insideFunction);
+      assert(insideNestedFunction);
+    }
+  }
+}
+```
+
+Notice how `nestedFunction()` can use variables from every level, all the way up to the top level.
+
+> 变量可见性的闭包原则，很普遍，没什么特殊的
+>
+
+### Lexical closures
+
+A *closure* is a function object that has access to variables in its lexical scope, even when the function is used outside of its original scope.
+
+Functions can close over variables defined in surrounding scopes. In the following example, `makeAdder()` captures the variable `addBy`. Wherever the returned function goes, it remembers `addBy`.
+
+```dart
+/// Returns a function that adds [addBy] to the
+/// function's argument.
+Function makeAdder(num addBy) {
+  return (num i) => addBy + i;
+}
+
+void main() {
+  // Create a function that adds 2.
+  var add2 = makeAdder(2);
+
+  // Create a function that adds 4.
+  var add4 = makeAdder(4);
+
+  assert(add2(3) == 5);
+  assert(add4(3) == 7);
+}
+```
+
+> 上述例子中，创建了两个Function，并各自记住了传入的addBy变量
+>
+> 对Java工程师来说，理解这种代码，感觉有点困难
+>
+> 虽然能看懂，但不推荐大量使用吧
+
+### Testing functions for equality
+
+Here’s an example of testing top-level functions, static methods, and instance methods for equality:
+
+```dart
+void foo() {} // A top-level function
+
+class A {
+  static void bar() {} // A static method
+  void baz() {} // An instance method
+}
+
+void main() {
+  var x;
+
+  // Comparing top-level functions.
+  x = foo;
+  assert(foo == x);
+
+  // Comparing static methods.
+  x = A.bar;
+  assert(A.bar == x);
+
+  // Comparing instance methods.
+  var v = A(); // Instance #1 of A
+  var w = A(); // Instance #2 of A
+  var y = w;
+  x = w.baz;
+
+  // These closures refer to the same instance (#2),
+  // so they're equal.
+  assert(y.baz == x);
+
+  // These closures refer to different instances,
+  // so they're unequal.
+  assert(v.baz != w.baz);
+}
+```
+
+> top-level：全局函数，相等
+>
+> static method：类静态函数，相等
+>
+> instance method：对象实例函数，对象不同则不相等
+
+### Return values
+
+All functions return a value. If no return value is specified, the statement `return null;` is implicitly appended to the function body.
+
+```dart
+foo() {}
+
+assert(foo() == null);
+```
+
+> 不像Java有void类型，当然Java中的返回值是必须强制指定的，这点与dart语法不同。
+>
+> dart默认返回值是null
+
+## Operators
+
+Dart defines the operators shown in the following table. You can override many of these operators, as described in [Overridable operators](https://dart.dev/guides/language/language-tour#overridable-operators).
+
+| Description              | Operator                                                     |
+| ------------------------ | ------------------------------------------------------------ |
+| unary postfix            | `*expr*++`  `*expr*--`  `()`  `[]`  `.`  `?.`                |
+| unary prefix             | `-*expr*`  `!*expr*`  `~*expr*`  `++*expr*`  `--*expr*`   `await *expr*` |
+| multiplicative           | `*`  `/`  `%` `~/`                                           |
+| additive                 | `+`  `-`                                                     |
+| shift                    | `<<`  `>>`  `>>>`                                            |
+| bitwise AND              | `&`                                                          |
+| bitwise XOR              | `^`                                                          |
+| bitwise OR               | `|`                                                          |
+| relational and type test | `>=`  `>`  `<=`  `<`  `as`  `is`  `is!`                      |
+| equality                 | `==`  `!=`                                                   |
+| logical AND              | `&&`                                                         |
+| logical OR               | `||`                                                         |
+| if null                  | `??`                                                         |
+| conditional              | `*expr1* ? *expr2* : *expr3*`                                |
+| cascade                  | `..`                                                         |
+| assignment               | `=`  `*=`  `/=`  `+=`  `-=`  `&=`  `^=`  *etc.*              |
+
+ **Warning:** Operator precedence is an approximation of the behavior of a Dart parser. For definitive answers, consult the grammar in the [Dart language specification](https://dart.dev/guides/language/spec).
+
+When you use operators, you create expressions. Here are some examples of operator expressions:
+
+```dart
+a++
+a + b
+a = b
+a == b
+c ? a : b
+a is T
+```
+
+In the [operator table](https://dart.dev/guides/language/language-tour#operators), each operator has higher precedence than the operators in the rows that follow it. For example, the multiplicative operator `%` has higher precedence than (and thus executes before) the equality operator `==`, which has higher precedence than the logical AND operator `&&`. That precedence means that the following two lines of code execute the same way:
+
+```dart
+// Parentheses improve readability.
+if ((n % i == 0) && (d % i == 0)) ...
+
+// Harder to read, but equivalent.
+if (n % i == 0 && d % i == 0) ...
+```
+
+> 运算符表中的优先级，从上到下，由高到低排列
+
+ **Warning:** For operators that work on two operands, the leftmost operand determines which version of the operator is used. For example, if you have a Vector object and a Point object, `aVector + aPoint` uses the Vector version of +.
+
+> 双目运算符，用左边的类型靠齐。
+
+### Arithmetic operators
+
+Dart supports the usual arithmetic operators, as shown in the following table.
+
+| Operator  | Meaning                                                      |
+| --------- | ------------------------------------------------------------ |
+| `+`       | Add                                                          |
+| `–`       | Subtract                                                     |
+| `-*expr*` | Unary minus, also known as negation (reverse the sign of the expression) |
+| `*`       | Multiply                                                     |
+| `/`       | Divide                                                       |
+| `~/`      | Divide, returning an integer result                          |
+| `%`       | Get the remainder of an integer division (modulo)            |
+
+> / 和 ~/ 分开了，/ 得到的结果是double（可能带小数），~/ 得到的结果是int（整除，类似于Java中的/）
+
+Example:
+
+```dart
+assert(2 + 3 == 5);
+assert(2 - 3 == -1);
+assert(2 * 3 == 6);
+assert(5 / 2 == 2.5); // Result is a double
+assert(5 ~/ 2 == 2); // Result is an int
+assert(5 % 2 == 1); // Remainder
+
+assert('5/2 = ${5 ~/ 2} r ${5 % 2}' == '5/2 = 2 r 1');
+```
+
+Dart also supports both prefix and postfix increment and decrement operators.
+
+| Operator | Meaning                                            |
+| -------- | -------------------------------------------------- |
+| `++var`  | `vart = vart + 1` (expression value is `vart + 1`) |
+| `vart++` | `vart = vart + 1` (expression value is `vart`)     |
+| `--vart` | `vart = vart – 1` (expression value is `vart – 1`) |
+| `vart--` | `vart = vart – 1` (expression value is `vart`)     |
+
+Example:
+
+```dart
+var a, b;
+
+a = 0;
+b = ++a; // Increment a before b gets its value.
+assert(a == b); // 1 == 1
+
+a = 0;
+b = a++; // Increment a AFTER b gets its value.
+assert(a != b); // 1 != 0
+
+a = 0;
+b = --a; // Decrement a before b gets its value.
+assert(a == b); // -1 == -1
+
+a = 0;
+b = a--; // Decrement a AFTER b gets its value.
+assert(a != b); // -1 != 0
+```
+
+### Equality and relational operators
+
+The following table lists the meanings of equality and relational operators.
+
+| Operator | Meaning                     |
+| -------- | --------------------------- |
+| `==`     | Equal; see discussion below |
+| `!=`     | Not equal                   |
+| `>`      | Greater than                |
+| `<`      | Less than                   |
+| `>=`     | Greater than or equal to    |
+| `<=`     | Less than or equal to       |
+
+To test whether two objects x and y represent the same thing, use the `==` operator. (In the rare case where you need to know whether two objects are the exact same object, use the [identical()](https://api.dart.dev/stable/dart-core/identical.html) function instead.) Here’s how the `==` operator works:
+
+1. If *x* or *y* is null, return true if both are null, and false if only one is null.
+2. Return the result of the method invocation `x==(y)`. (That’s right, operators such as `==` are methods that are invoked on their first operand. You can even override many operators, including `==`, as you’ll see in [Overridable operators](https://dart.dev/guides/language/language-tour#overridable-operators).)
+
+> == 类似于Java中的equals()方法，比较内容
+>
+> identical() 类似于Java中的==方法，判断是否同一个对象，比较内存地址
+
+Here’s an example of using each of the equality and relational operators:
+
+```dart
+assert(2 == 2);
+assert(2 != 3);
+assert(3 > 2);
+assert(2 < 3);
+assert(3 >= 3);
+assert(2 <= 3);
+```
+
+### Type test operators
+
+The `as`, `is`, and `is!` operators are handy for checking types at runtime.
+
+| Operator | Meaning                                                      |
+| -------- | ------------------------------------------------------------ |
+| `as`     | Typecast (also used to specify [library prefixes](https://dart.dev/guides/language/language-tour#specifying-a-library-prefix)) |
+| `is`     | True if the object has the specified type                    |
+| `is!`    | False if the object has the specified type                   |
+
+The result of `obj is T` is true if `obj` implements the interface specified by `T`. For example, `obj is Object` is always true.
+
+Use the `as` operator to cast an object to a particular type if and only if you are sure that the object is of that type. Example:
+
+```dart
+(emp as Person).firstName = 'Bob';
+```
+
+If you aren’t sure that the object is of type `T`, then use `is T` to check the type before using the object.
+
+```dart
+if (emp is Person) {
+  // Type check
+  emp.firstName = 'Bob';
+}
+```
+
+ **Note:** The code isn’t equivalent. If `emp` is null or not a `Person`, the first example throws an exception; the second does nothing.
+
+### Assignment operators
+
+As you’ve already seen, you can assign values using the `=` operator. To assign only if the assigned-to variable is null, use the `??=` operator.
+
+```dart
+// Assign value to a
+a = value;
+// Assign value to b if b is null; otherwise, b stays the same
+b ??= value;
+```
+
+> ??= 相当于只初始化一次
+>
+> 如果对此运算符不太熟悉，通过代码实现，可读性更好
+
+Compound assignment operators such as `+=` combine an operation with an assignment.
+
+| `=`  | `–=` | `/=`  | `%=`  | `>>=` | `^=` |
+| ---- | ---- | ----- | ----- | ----- | ---- |
+| `+=` | `*=` | `~/=` | `<<=` | `&=`  | `|=` |
+
+Here’s how compound assignment operators work:
+
+|                         | Compound assignment | Equivalent expression |
+| ----------------------- | ------------------- | --------------------- |
+| **For an operator op:** | `a op= b`           | `a = a op b`          |
+| **Example:**            | `a += b`            | `a = a + b`           |
+
+The following example uses assignment and compound assignment operators:
+
+```dart
+var a = 2; // Assign using =
+a *= 3; // Assign and multiply: a = a * 3
+assert(a == 6);
+```
+
+### Logical operators
+
+You can invert or combine boolean expressions using the logical operators.
+
+| Operator | Meaning                                                      |
+| -------- | ------------------------------------------------------------ |
+| `!expr`  | inverts the following expression (changes false to true, and vice versa) |
+| `||`     | logical OR                                                   |
+| `&&`     | logical AND                                                  |
+
+Here’s an example of using the logical operators:
+
+```dart
+if (!done && (col == 0 || col == 3)) {
+  // ...Do something...
+}
+```
+
+### Bitwise and shift operators
+
+You can manipulate the individual bits of numbers in Dart. Usually, you’d use these bitwise and shift operators with integers.
+
+| Operator | Meaning                                               |
+| -------- | ----------------------------------------------------- |
+| `&`      | AND                                                   |
+| `|`      | OR                                                    |
+| `^`      | XOR                                                   |
+| `~expr`  | Unary bitwise complement (0s become 1s; 1s become 0s) |
+| `<<`     | Shift left                                            |
+| `>>`     | Shift right                                           |
+
+Here’s an example of using bitwise and shift operators:
+
+```dart
+final value = 0x22;
+final bitmask = 0x0f;
+
+assert((value & bitmask) == 0x02); // AND
+assert((value & ~bitmask) == 0x20); // AND NOT
+assert((value | bitmask) == 0x2f); // OR
+assert((value ^ bitmask) == 0x2d); // XOR
+assert((value << 4) == 0x220); // Shift left
+assert((value >> 4) == 0x02); // Shift right
+```
+
+### Conditional expressions
+
+Dart has two operators that let you concisely evaluate expressions that might otherwise require [if-else](https://dart.dev/guides/language/language-tour#if-and-else) statements:
+
+- `condition ? expr1 : expr2`
+
+  If *condition* is true, evaluates *expr1* (and returns its value); otherwise, evaluates and returns the value of *expr2*.
+
+- `expr1 ?? expr2`
+
+  If *expr1* is non-null, returns its value; otherwise, evaluates and returns the value of *expr2*.
+
+> ?? 运算符可能挺常用的，尤其是在拼接输出的时候，大大增强代码简洁性
+
+When you need to assign a value based on a boolean expression, consider using `?:`.
+
+```dart
+var visibility = isPublic ? 'public' : 'private';
+```
+
+If the boolean expression tests for null, consider using `??`.
+
+```dart
+String playerName(String name) => name ?? 'Guest';
+```
+
+The previous example could have been written at least two other ways, but not as succinctly:
+
+```dart
+// Slightly longer version uses ?: operator.
+String playerName(String name) => name != null ? name : 'Guest';
+
+// Very long version uses if-else statement.
+String playerName(String name) {
+  if (name != null) {
+    return name;
+  } else {
+    return 'Guest';
+  }
+}
+```
+
+### Cascade notation (..)
+
+Cascades (`..`) allow you to make a sequence of operations on the same object. In addition to function calls, you can also access fields on that same object. This often saves you the step of creating a temporary variable and allows you to write more fluid code.
+
+Consider the following code:
+
+```dart
+querySelector('#confirm') // Get an object.
+  ..text = 'Confirm' // Use its members.
+  ..classes.add('important')
+  ..onClick.listen((e) => window.alert('Confirmed!'));
+```
+
+The first method call, `querySelector()`, returns a selector object. The code that follows the cascade notation operates on this selector object, ignoring any subsequent values that might be returned.
+
+The previous example is equivalent to:
+
+```dart
+var button = querySelector('#confirm');
+button.text = 'Confirm';
+button.classes.add('important');
+button.onClick.listen((e) => window.alert('Confirmed!'));
+```
+
+You can also nest your cascades. For example:
+
+```dart
+final addressBook = (AddressBookBuilder()
+      ..name = 'jenny'
+      ..email = 'jenny@example.com'
+      ..phone = (PhoneNumberBuilder()
+            ..number = '415-555-0100'
+            ..label = 'home')
+          .build())
+    .build();
+```
+
+Be careful to construct your cascade on a function that returns an actual object. For example, the following code fails:
+
+```dart
+var sb = StringBuffer();
+sb.write('foo')
+  ..write('bar'); // Error: method 'write' isn't defined for 'void'.
+```
+
+The `sb.write()` call returns void, and you can’t construct a cascade on `void`.
+
+ **Note:** Strictly speaking, the “double dot” notation for cascades is not an operator. It’s just part of the Dart syntax.
+
+> 相当于在语法级别支持了流式设计模式，u.14！
+
+### Other operators
+
+You’ve seen most of the remaining operators in other examples:
+
+| Operator | Name                      | Meaning                                                      |
+| -------- | ------------------------- | ------------------------------------------------------------ |
+| `()`     | Function application      | Represents a function call                                   |
+| `[]`     | List access               | Refers to the value at the specified index in the list       |
+| `.`      | Member access             | Refers to a property of an expression; example: `foo.bar` selects property `bar` from expression `foo` |
+| `?.`     | Conditional member access | Like `.`, but the leftmost operand can be null; example: `foo?.bar` selects property `bar` from expression `foo` unless `foo` is null (in which case the value of `foo?.bar` is null) |
+
+For more information about the `.`, `?.`, and `..` operators, see [Classes](https://dart.dev/guides/language/language-tour#classes).
+
+> ?. 简化了判空逻辑，增强代码的简洁性
+
+## Control flow statements
+
+You can control the flow of your Dart code using any of the following:
+
+- `if` and `else`
+- `for` loops
+- `while` and `do`-`while` loops
+- `break` and `continue`
+- `switch` and `case`
+- `assert`
+
+You can also affect the control flow using `try-catch` and `throw`, as explained in [Exceptions](https://dart.dev/guides/language/language-tour#exceptions).
+
+### If and else
+
+Dart supports `if` statements with optional `else` statements, as the next sample shows. Also see [conditional expressions](https://dart.dev/guides/language/language-tour#conditional-expressions).
+
+```dart
+if (isRaining()) {
+  you.bringRainCoat();
+} else if (isSnowing()) {
+  you.wearJacket();
+} else {
+  car.putTopDown();
+}
+```
+
+Unlike JavaScript, conditions must use boolean values, nothing else. See [Booleans](https://dart.dev/guides/language/language-tour#booleans) for more information.
+
+### For loops
+
+You can iterate with the standard `for` loop. For example:
+
+```dart
+var message = StringBuffer('Dart is fun');
+for (var i = 0; i < 5; i++) {
+  message.write('!');
+}
+```
+
+Closures inside of Dart’s `for` loops capture the *value* of the index, avoiding a common pitfall found in JavaScript. For example, consider:
+
+```dart
+var callbacks = [];
+for (var i = 0; i < 2; i++) {
+  callbacks.add(() => print(i));
+}
+callbacks.forEach((c) => c());
+```
+
+The output is `0` and then `1`, as expected. In contrast, the example would print `2` and then `2` in JavaScript.
+
+If the object that you are iterating over is an Iterable, you can use the [forEach()](https://api.dart.dev/stable/dart-core/Iterable/forEach.html) method. Using `forEach()` is a good option if you don’t need to know the current iteration counter:
+
+```dart
+candidates.forEach((candidate) => candidate.interview());
+```
+
+Iterable classes such as List and Set also support the `for-in` form of [iteration](https://dart.dev/guides/libraries/library-tour#iteration):
+
+```dart
+var collection = [0, 1, 2];
+for (var x in collection) {
+  print(x); // 0 1 2
+}
+```
+
+### While and do-while
+
+A `while` loop evaluates the condition before the loop:
+
+```dart
+while (!isDone()) {
+  doSomething();
+}
+```
+
+A `do`-`while` loop evaluates the condition *after* the loop:
+
+```dart
+do {
+  printLine();
+} while (!atEndOfPage());
+```
+
+### Break and continue
+
+Use `break` to stop looping:
+
+```dart
+while (true) {
+  if (shutDownRequested()) break;
+  processIncomingRequests();
+}
+```
+
+Use `continue` to skip to the next loop iteration:
+
+```dart
+for (int i = 0; i < candidates.length; i++) {
+  var candidate = candidates[i];
+  if (candidate.yearsExperience < 5) {
+    continue;
+  }
+  candidate.interview();
+}
+```
+
+You might write that example differently if you’re using an [Iterable](https://api.dart.dev/stable/dart-core/Iterable-class.html) such as a list or set:
+
+```dart
+candidates
+    .where((c) => c.yearsExperience >= 5)
+    .forEach((c) => c.interview());
+```
+
+> where方法很赞，增强了代码可读性！
+
+### Switch and case
+
+Switch statements in Dart compare integer, string, or compile-time constants using `==`. The compared objects must all be instances of the same class (and not of any of its subtypes), and the class must not override `==`. [Enumerated types](https://dart.dev/guides/language/language-tour#enumerated-types) work well in `switch` statements.
+
+> int、string、编译时常量可以被switch...case...
+>
+> 被switch的类是精确地同一种类型（不能是子类），并且不能重载==运算符
+>
+> 枚举类型在switch中工作的很顺畅，推荐使用
+
+ **Note:** Switch statements in Dart are intended for limited circumstances, such as in interpreters or scanners.
+
+Each non-empty `case` clause ends with a `break` statement, as a rule. Other valid ways to end a non-empty `case` clause are a `continue`, `throw`, or `return` statement.
+
+Use a `default` clause to execute code when no `case` clause matches:
+
+```dart
+var command = 'OPEN';
+switch (command) {
+  case 'CLOSED':
+    executeClosed();
+    break;
+  case 'PENDING':
+    executePending();
+    break;
+  case 'APPROVED':
+    executeApproved();
+    break;
+  case 'DENIED':
+    executeDenied();
+    break;
+  case 'OPEN':
+    executeOpen();
+    break;
+  default:
+    executeUnknown();
+}
+```
+
+The following example omits the `break` statement in a `case` clause, thus generating an error:
+
+```dart
+var command = 'OPEN';
+switch (command) {
+  case 'OPEN':
+    executeOpen();
+    // ERROR: Missing break
+
+  case 'CLOSED':
+    executeClosed();
+    break;
+}
+```
+
+However, Dart does support empty `case` clauses, allowing a form of fall-through:
+
+```dart
+var command = 'CLOSED';
+switch (command) {
+  case 'CLOSED': // Empty case falls through.
+  case 'NOW_CLOSED':
+    // Runs for both CLOSED and NOW_CLOSED.
+    executeNowClosed();
+    break;
+}
+```
+
+If you really want fall-through, you can use a `continue` statement and a label:
+
+```dart
+var command = 'CLOSED';
+switch (command) {
+  case 'CLOSED':
+    executeClosed();
+    continue nowClosed;
+  // Continues executing at the nowClosed label.
+
+  nowClosed:
+  case 'NOW_CLOSED':
+    // Runs for both CLOSED and NOW_CLOSED.
+    executeNowClosed();
+    break;
+}
+```
+
+A `case` clause can have local variables, which are visible only inside the scope of that clause.
+
+### Assert
+
+During development, use an assert statement — `assert(condition, optionalMessage)`; — to disrupt normal execution if a boolean condition is false. You can find examples of assert statements throughout this tour. Here are some more:
+
+```dart
+// Make sure the variable has a non-null value.
+assert(text != null);
+
+// Make sure the value is less than 100.
+assert(number < 100);
+
+// Make sure this is an https URL.
+assert(urlString.startsWith('https'));
+```
+
+To attach a message to an assertion, add a string as the second argument to `assert`.
+
+```dart
+assert(urlString.startsWith('https'),
+    'URL ($urlString) should start with "https".');
+```
+
+The first argument to `assert` can be any expression that resolves to a boolean value. If the expression’s value is true, the assertion succeeds and execution continues. If it’s false, the assertion fails and an exception (an [AssertionError](https://api.dart.dev/stable/dart-core/AssertionError-class.html)) is thrown.
+
+When exactly do assertions work? That depends on the tools and framework you’re using:
+
+- Flutter enables assertions in [debug mode.](https://flutter.dev/docs/testing/debugging#debug-mode-assertions)
+- Development-only tools such as [dartdevc](https://dart.dev/tools/dartdevc) typically enable assertions by default.
+- Some tools, such as [dart](https://dart.dev/server/tools/dart-vm) and [dart2js,](https://dart.dev/tools/dart2js) support assertions through a command-line flag: `--enable-asserts`.
+
+In production code, assertions are ignored, and the arguments to `assert` aren’t evaluated.
+
+> debug模式默认开启assert，product模式默认关闭
+>
+> 开发工具环境下，比如dartdevc默认开启assert
+>
+> 某些工具，比如dart和dart2js，可以接收命令行参数开启assert
+
+## Exceptions
+
+Your Dart code can throw and catch exceptions. Exceptions are errors indicating that something unexpected happened. If the exception isn’t caught, the [isolate](https://dart.dev/guides/language/language-tour#isolates) that raised the exception is suspended, and typically the isolate and its program are terminated.
+
+In contrast to Java, all of Dart’s exceptions are unchecked exceptions. Methods do not declare which exceptions they might throw, and you are not required to catch any exceptions.
+
+Dart provides [Exception](https://api.dart.dev/stable/dart-core/Exception-class.html) and [Error](https://api.dart.dev/stable/dart-core/Error-class.html) types, as well as numerous predefined subtypes. You can, of course, define your own exceptions. However, Dart programs can throw any non-null object—not just Exception and Error objects—as an exception.
+
+### Throw
+
+Here’s an example of throwing, or *raising*, an exception:
+
+```dart
+throw FormatException('Expected at least 1 section');
+```
+
+You can also throw arbitrary objects:
+
+```dart
+throw 'Out of llamas!';
+```
+
+ **Note:** Production-quality code usually throws types that implement [Error](https://api.dart.dev/stable/dart-core/Error-class.html) or [Exception](https://api.dart.dev/stable/dart-core/Exception-class.html).
+
+> throw 非Exception or Error对象时，只能通过catch捕获，不能用on，下面的catch章节有介绍
+
+Because throwing an exception is an expression, you can throw exceptions in => statements, as well as anywhere else that allows expressions:
+
+```dart
+void distanceTo(Point other) => throw UnimplementedError();
+```
+
+### Catch
+
+Catching, or capturing, an exception stops the exception from propagating (unless you rethrow the exception). Catching an exception gives you a chance to handle it:
+
+```dart
+try {
+  breedMoreLlamas();
+} on OutOfLlamasException {
+  buyMoreLlamas();
+}
+```
+
+To handle code that can throw more than one type of exception, you can specify multiple catch clauses. The first catch clause that matches the thrown object’s type handles the exception. If the catch clause does not specify a type, that clause can handle any type of thrown object:
+
+```dart
+try {
+  breedMoreLlamas();
+} on OutOfLlamasException {
+  // A specific exception
+  buyMoreLlamas();
+} on Exception catch (e) {
+  // Anything else that is an exception
+  print('Unknown exception: $e');
+} catch (e) {
+  // No specified type, handles all
+  print('Something really unknown: $e');
+}
+```
+
+As the preceding code shows, you can use either `on` or `catch` or both. Use `on` when you need to specify the exception type. Use `catch` when your exception handler needs the exception object.
+
+You can specify one or two parameters to `catch()`. The first is the exception that was thrown, and the second is the stack trace (a [StackTrace](https://api.dart.dev/stable/dart-core/StackTrace-class.html) object).
+
+```dart
+try {
+  // ···
+} on Exception catch (e) {
+  print('Exception details:\n $e');
+} catch (e, s) {
+  print('Exception details:\n $e');
+  print('Stack trace:\n $s');
+}
+```
+
+To partially handle an exception, while allowing it to propagate, use the `rethrow` keyword.
+
+```dart
+void misbehave() {
+  try {
+    dynamic foo = true;
+    print(foo++); // Runtime error
+  } catch (e) {
+    print('misbehave() partially handled ${e.runtimeType}.');
+    rethrow; // Allow callers to see the exception.
+  }
+}
+
+void main() {
+  try {
+    misbehave();
+  } catch (e) {
+    print('main() finished handling ${e.runtimeType}.');
+  }
+}
+```
+
+### Finally
+
+To ensure that some code runs whether or not an exception is thrown, use a `finally` clause. If no `catch` clause matches the exception, the exception is propagated after the `finally` clause runs:
+
+```dart
+try {
+  breedMoreLlamas();
+} finally {
+  // Always clean up, even if an exception is thrown.
+  cleanLlamaStalls();
+}
+```
+
+The `finally` clause runs after any matching `catch` clauses:
+
+```dart
+try {
+  breedMoreLlamas();
+} catch (e) {
+  print('Error: $e'); // Handle the exception first.
+} finally {
+  cleanLlamaStalls(); // Then clean up.
+}
+```
+
+Learn more by reading the [Exceptions](https://dart.dev/guides/libraries/library-tour#exceptions) section of the library tour.
+
+## Classes
+
+Dart is an object-oriented language with classes and mixin-based inheritance. Every object is an instance of a class, and all classes descend from [Object.](https://api.dart.dev/stable/dart-core/Object-class.html) *Mixin-based inheritance* means that although every class (except for Object) has exactly one superclass, a class body can be reused in multiple class hierarchies. [Extension methods](https://dart.dev/guides/language/language-tour#extension-methods) are a way to add functionality to a class without changing the class or creating a subclass.
+
+### Using class members
+
+Objects have *members* consisting of functions and data (*methods* and *instance variables*, respectively). When you call a method, you *invoke* it on an object: the method has access to that object’s functions and data.
+
+Use a dot (`.`) to refer to an instance variable or method:
+
+```dart
+var p = Point(2, 2);
+
+// Set the value of the instance variable y.
+p.y = 3;
+
+// Get the value of y.
+assert(p.y == 3);
+
+// Invoke distanceTo() on p.
+num distance = p.distanceTo(Point(4, 4));
+```
+
+Use `?.` instead of `.` to avoid an exception when the leftmost operand is null:
+
+```dart
+// If p is non-null, set its y value to 4.
+p?.y = 4;
+```
+
+> ?. 带来代码的简洁性，付出的代价是程序员多理解一个操作符
+
+### Using constructors
+
+You can create an object using a *constructor*. Constructor names can be either `*ClassName*` or `*ClassName*.*identifier*`. For example, the following code creates `Point` objects using the `Point()` and `Point.fromJson()` constructors:
+
+```dart
+var p1 = Point(2, 2);
+var p2 = Point.fromJson({'x': 1, 'y': 2});
+```
+
+The following code has the same effect, but uses the optional `new` keyword before the constructor name:
+
+```dart
+var p1 = new Point(2, 2);
+var p2 = new Point.fromJson({'x': 1, 'y': 2});
+```
+
+ **Version note:** The `new` keyword became optional in Dart 2.
+
+Some classes provide [constant constructors](https://dart.dev/guides/language/language-tour#constant-constructors). To create a compile-time constant using a constant constructor, put the `const` keyword before the constructor name:
+
+```dart
+var p = const ImmutablePoint(2, 2);
+```
+
+Constructing two identical compile-time constants results in a single, canonical instance:
+
+```dart
+var a = const ImmutablePoint(1, 1);
+var b = const ImmutablePoint(1, 1);
+
+assert(identical(a, b)); // They are the same instance!
+```
+
+> const变量在compile-time被创建为singleton
+
+Within a *constant context*, you can omit the `const` before a constructor or literal. For example, look at this code, which creates a const map:
+
+```dart
+// Lots of const keywords here.
+const pointAndLine = const {
+  'point': const [const ImmutablePoint(0, 0)],
+  'line': const [const ImmutablePoint(1, 10), const ImmutablePoint(-2, 11)],
+};
+```
+
+You can omit all but the first use of the `const` keyword:
+
+```dart
+// Only one const, which establishes the constant context.
+const pointAndLine = {
+  'point': [ImmutablePoint(0, 0)],
+  'line': [ImmutablePoint(1, 10), ImmutablePoint(-2, 11)],
+};
+```
+
+If a constant constructor is outside of a constant context and is invoked without `const`, it creates a **non-constant object**:
+
+```dart
+var a = const ImmutablePoint(1, 1); // Creates a constant
+var b = ImmutablePoint(1, 1); // Does NOT create a constant
+
+assert(!identical(a, b)); // NOT the same instance!
+```
+
+ **Version note:** The `const` keyword became optional within a constant context in Dart 2.
 
 
 
