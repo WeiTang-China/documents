@@ -59,7 +59,7 @@ selinux denied log enable is: 1
 
 如果有这个precompiled文件且hash和system/product下的一致，就用precompiled文件； 
 
-如果把odm下的precompiled删除了，它就重新编译并加载所有的cil文件
+如果把odm或者vendor下的precompiled删除了，它就重新编译并加载所有的cil文件
 
 ```
 This file contains the functions that initialize SELinux during boot as well as helper functions
@@ -97,6 +97,70 @@ The split SEPolicy is loaded as described below:
 ```
 
 可以参考其他配置，直接修改cil文件，push回手机并reboot，快速验证效果。
+
+
+
+具体操作可以参考如下步骤：
+
+1. remount system/vendor分区（需要root和unlock设备）
+
+   adb disable-verity
+
+   adb reboot
+
+   adb remount
+
+
+
+2. 替换相关selinux policy改动的文件：
+
+  - te
+
+    需要修改/vendor/etc/selinux/vendor_sepolicy_debug.cil或者/system/etc/selinux/plat_sepolicy_debug.cil （AOSP原始版本不带debug后缀）
+
+- file_contexts
+
+  需要修改/vendor/etc/selinux/vendor_file_contexts或者/system/etc/selinux/plat_file_contexts, 针对这个修改，通过下面命令使目标文件selabel生效
+
+  adb shell restorecon
+
+- property_contexts
+
+  需要修改/vendor/etc/selinux/vendor_property_contexts或者 /system/etc/selinux/plat_property_contexts
+
+- service_contexts
+
+  需要修改/system/etc/selinux/plat_service_contexts
+
+- vndservice_contexts
+
+  需要修改/vendor/etc/selinux/vndservice_contexts
+
+- hwservice_contexts
+
+  需要修改/vendor/etc/selinux/vendor_hwservice_contexts或者 /system/etc/selinux/plat_hwservice_contexts
+
+- seapp_contexts
+
+  需要修改/vendor/etc/selinux/vendor_seapp_contexts或者/system/etc/selinux/plat_seapp_contexts
+
+
+
+3. 验证策略改动没有问题（否则会导致不开机），方法有如下2种
+
+- 单独编译selinux_policy，确保没有nerverallow, 编译命令如下
+
+  ./mk_android.sh -t user -m selinux_policy -N
+
+- 手机端编译修改，确保没有policy编译错误，命令如下
+
+  adb shell secilc /system/etc/selinux/plat_sepolicy_debug.cil -m -M true -G -N -c 30 -o /dev/sepolicy.bin -f /dev/null /system/etc/selinux/mapping/29.0.cil  /vendor/etc/selinux/vendor_sepolicy_debug.cil  /vendor/etc/selinux/plat_pub_versioned_debug.cil
+
+ 
+
+4. 重启手机生效selinux policy修改
+
+
 
 
 
