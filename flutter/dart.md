@@ -2009,31 +2009,273 @@ With getters and setters, you can start with instance variables, later wrapping 
 
  **Note:** Operators such as increment (++) work in the expected way, whether or not a getter is explicitly defined. To avoid any unexpected side effects, the operator calls the getter exactly once, saving its value in a temporary variable.
 
+#### Abstract methods
 
+Instance, getter, and setter methods can be abstract, defining an interface but leaving its implementation up to other classes. Abstract methods can only exist in [abstract classes](https://dart.dev/guides/language/language-tour#abstract-classes).
 
+To make a method abstract, use a semicolon (;) instead of a method body:
 
+```dart
+abstract class Doer {
+  // Define instance variables and methods...
 
+  void doSomething(); // Define an abstract method.
+}
 
+class EffectiveDoer extends Doer {
+  void doSomething() {
+    // Provide an implementation, so the method is not abstract here...
+  }
+}
+```
 
+> 与Java不同，abstract方法不需要用关键字申明，只需要用;代替方法体即可
 
+### Abstract classes
 
+Use the `abstract` modifier to define an *abstract class*—a class that can’t be instantiated. Abstract classes are useful for defining interfaces, often with some implementation. If you want your abstract class to appear to be instantiable, define a [factory constructor](https://dart.dev/guides/language/language-tour#factory-constructors).
 
+Abstract classes often have [abstract methods](https://dart.dev/guides/language/language-tour#abstract-methods). Here’s an example of declaring an abstract class that has an abstract method:
 
+```dart
+// This class is declared abstract and thus
+// can't be instantiated.
+abstract class AbstractContainer {
+  // Define constructors, fields, methods...
 
+  void updateChildren(); // Abstract method.
+}
+```
 
+> abstract类不能直接初始化，但可以定义factory构造函数
+>
 
+### Implicit interfaces
 
+Every class implicitly defines an interface containing all the instance members of the class and of any interfaces it implements. If you want to create a class A that supports class B’s API without inheriting B’s implementation, class A should implement the B interface.
 
+A class implements one or more interfaces by declaring them in an `implements` clause and then providing the APIs required by the interfaces. For example:
 
+```dart
+// A person. The implicit interface contains greet().
+class Person {
+  // In the interface, but visible only in this library.
+  final _name;
 
+  // Not in the interface, since this is a constructor.
+  Person(this._name);
 
+  // In the interface.
+  String greet(String who) => 'Hello, $who. I am $_name.';
+}
 
+// An implementation of the Person interface.
+class Impostor implements Person {
+  get _name => '';
 
+  String greet(String who) => 'Hi $who. Do you know who I am?';
+}
 
+String greetBob(Person person) => person.greet('Bob');
 
+void main() {
+  print(greetBob(Person('Kathy')));
+  print(greetBob(Impostor()));
+}
+```
 
+Here’s an example of specifying that a class implements multiple interfaces:
 
+```dart
+class Point implements Comparable, Location {...}
+```
 
+### Extending a class
+
+Use `extends` to create a subclass, and `super` to refer to the superclass:
+
+```dart
+class Television {
+  void turnOn() {
+    _illuminateDisplay();
+    _activateIrSensor();
+  }
+  // ···
+}
+
+class SmartTelevision extends Television {
+  void turnOn() {
+    super.turnOn();
+    _bootNetworkInterface();
+    _initializeMemory();
+    _upgradeApps();
+  }
+  // ···
+}
+```
+
+#### Overriding members
+
+Subclasses can override instance methods, getters, and setters. You can use the `@override` annotation to indicate that you are intentionally overriding a member:
+
+```dart
+class SmartTelevision extends Television {
+  @override
+  void turnOn() {...}
+  // ···
+}
+```
+
+To narrow the type of a method parameter or instance variable in code that is [type safe](https://dart.dev/guides/language/sound-dart), you can use the [`covariant` keyword](https://dart.dev/guides/language/sound-problems#the-covariant-keyword).
+
+#### Overridable operators
+
+You can override the operators shown in the following table. For example, if you define a Vector class, you might define a `+` method to add two vectors.
+
+| `<`  | `+`  | `|`  | `[]`  |
+| ---- | ---- | ---- | ----- |
+| `>`  | `/`  | `^`  | `[]=` |
+| `<=` | `~/` | `&`  | `~`   |
+| `>=` | `*`  | `<<` | `==`  |
+| `–`  | `%`  | `>>` |       |
+
+ **Note:** You may have noticed that `!=` is not an overridable operator. The expression `e1 != e2` is just syntactic sugar for `!(e1 == e2)`.
+
+Here’s an example of a class that overrides the `+` and `-` operators:
+
+```dart
+class Vector {
+  final int x, y;
+
+  Vector(this.x, this.y);
+
+  Vector operator +(Vector v) => Vector(x + v.x, y + v.y);
+  Vector operator -(Vector v) => Vector(x - v.x, y - v.y);
+
+  // Operator == and hashCode not shown. For details, see note below.
+  // ···
+}
+
+void main() {
+  final v = Vector(2, 3);
+  final w = Vector(2, 2);
+
+  assert(v + w == Vector(4, 5));
+  assert(v - w == Vector(0, 1));
+}
+```
+
+If you override `==`, you should also override Object’s `hashCode` getter. For an example of overriding `==` and `hashCode`, see [Implementing map keys](https://dart.dev/guides/libraries/library-tour#implementing-map-keys).
+
+For more information on overriding, in general, see [Extending a class](https://dart.dev/guides/language/language-tour#extending-a-class).
+
+> 运算符重载属于高阶操作，一般不推荐使用
+>
+> 但不同于Java的是，没看到equals()方法，估计都是通过==来比对的吧
+>
+> 看上去这个章节是绕不过去了
+
+#### noSuchMethod()
+
+To detect or react whenever code attempts to use a non-existent method or instance variable, you can override `noSuchMethod()`:
+
+```dart
+class A {
+  // Unless you override noSuchMethod, using a
+  // non-existent member results in a NoSuchMethodError.
+  @override
+  void noSuchMethod(Invocation invocation) {
+    print('You tried to use a non-existent member: ' +
+        '${invocation.memberName}');
+  }
+}
+```
+
+You **can’t invoke** an unimplemented method unless **one** of the following is true:
+
+- The receiver has the static type `dynamic`.
+- The receiver has a static type that defines the unimplemented method (abstract is OK), and the dynamic type of the receiver has an implemention of `noSuchMethod()` that’s different from the one in class `Object`.
+
+For more information, see the informal [noSuchMethod forwarding specification.](https://github.com/dart-lang/sdk/blob/master/docs/language/informal/nosuchmethod-forwarding.md)
+
+> 这也太灵活了吧！
+>
+> 我还是接受报错吧，在没有掌握得很好之前，不要瞎搞
+
+### Extension methods
+
+Extension methods, introduced in Dart 2.7, are a way to add functionality to existing libraries. You might use extension methods without even knowing it. For example, when you use code completion in an IDE, it suggests extension methods alongside regular methods.
+
+Here’s an example of using an extension method on `String` named `parseInt()` that’s defined in `string_apis.dart`:
+
+```dart
+import 'string_apis.dart';
+...
+print('42'.padLeft(5)); // Use a String method.
+print('42'.parseInt()); // Use an extension method.
+```
+
+For details of using and implementing extension methods, see the [extension methods page](https://dart.dev/guides/language/extension-methods).
+
+> 这个特性，非常有想象力！
+>
+> I like the Dart world!
+
+### Enumerated types
+
+Enumerated types, often called *enumerations* or *enums*, are a special kind of class used to represent a fixed number of constant values.
+
+#### Using enums
+
+Declare an enumerated type using the `enum` keyword:
+
+```dart
+enum Color { red, green, blue }
+```
+
+Each value in an enum has an `index` getter, which returns the zero-based position of the value in the enum declaration. For example, the first value has index 0, and the second value has index 1.
+
+```dart
+assert(Color.red.index == 0);
+assert(Color.green.index == 1);
+assert(Color.blue.index == 2);
+```
+
+To get a list of all of the values in the enum, use the enum’s `values` constant.
+
+```dart
+List<Color> colors = Color.values;
+assert(colors[2] == Color.blue);
+```
+
+You can use enums in [switch statements](https://dart.dev/guides/language/language-tour#switch-and-case), and you’ll get a warning if you don’t handle all of the enum’s values:
+
+```dart
+var aColor = Color.blue;
+
+switch (aColor) {
+  case Color.red:
+    print('Red as roses!');
+    break;
+  case Color.green:
+    print('Green as grass!');
+    break;
+  default: // Without this, you see a WARNING.
+    print(aColor); // 'Color.blue'
+}
+```
+
+Enumerated types have the following limits:
+
+- You can’t subclass, mix in, or implement an enum.
+- You can’t explicitly instantiate an enum.
+
+For more information, see the [Dart language specification](https://dart.dev/guides/language/spec).
+
+> - 枚举使用enum关键字
+> - 每个enum项都默认有index这个属性，它是从0开始递增的
+> - enum可以在switch...case...中使用
+> - enum有两个限制：1、不能子类、mix in或者implement  2、不能显式的初始化它
 
 
 
