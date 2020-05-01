@@ -1710,27 +1710,304 @@ assert(!identical(a, b)); // NOT the same instance!
 
  **Version note:** The `const` keyword became optional within a constant context in Dart 2.
 
+### Getting an object’s type
+
+To get an object’s type at runtime, you can use Object’s `runtimeType` property, which returns a [Type](https://api.dart.dev/stable/dart-core/Type-class.html) object.
+
+```dart
+print('The type of a is ${a.runtimeType}');
+```
+
+Up to here, you’ve seen how to *use* classes. The rest of this section shows how to *implement* classes.
+
+> 类似于Java的getClass()
+
+### Instance variables
+
+Here’s how you declare instance variables:
+
+```dart
+class Point {
+  num x; // Declare instance variable x, initially null.
+  num y; // Declare y, initially null.
+  num z = 0; // Declare z, initially 0.
+}
+```
+
+All uninitialized instance variables have the value `null`.
+
+All instance variables generate an implicit *getter* method. Non-final instance variables also generate an implicit *setter* method. For details, see [Getters and setters](https://dart.dev/guides/language/language-tour#getters-and-setters).
+
+```dart
+class Point {
+  num x;
+  num y;
+}
+
+void main() {
+  var point = Point();
+  point.x = 4; // Use the setter method for x.
+  assert(point.x == 4); // Use the getter method for x.
+  assert(point.y == null); // Values default to null.
+}
+```
+
+If you initialize an instance variable where it is declared (instead of in a constructor or method), the value is set when the instance is created, which is before the constructor and its initializer list execute.
+
+> initializer list，不太理解这个的意思，可能后面会讲到
+
+### Constructors
+
+Declare a constructor by creating a function with the same name as its class (plus, optionally, an additional identifier as described in [Named constructors](https://dart.dev/guides/language/language-tour#named-constructors)). The most common form of constructor, the generative constructor, creates a new instance of a class:
+
+```dart
+class Point {
+  num x, y;
+
+  Point(num x, num y) {
+    // There's a better way to do this, stay tuned.
+    this.x = x;
+    this.y = y;
+  }
+}
+```
+
+The `this` keyword refers to the current instance.
+
+ **Note:** Use `this` only when there is a name conflict. Otherwise, Dart style omits the `this`.
+
+The pattern of assigning a constructor argument to an instance variable is so common, Dart has syntactic sugar to make it easy:
+
+```dart
+class Point {
+  num x, y;
+
+  // Syntactic sugar for setting x and y
+  // before the constructor body runs.
+  Point(this.x, this.y);
+}
+```
+
+> 这个语法糖很实用，增加代码的简洁度
+
+#### Default constructors
+
+If you don’t declare a constructor, a default constructor is provided for you. The default constructor has no arguments and invokes the no-argument constructor in the superclass.
+
+#### Constructors aren’t inherited
+
+Subclasses don’t inherit constructors from their superclass. A subclass that declares no constructors has only the default (no argument, no name) constructor.
+
+#### Named constructors
+
+Use a named constructor to implement multiple constructors for a class or to provide extra clarity:
+
+```dart
+class Point {
+  num x, y;
+
+  Point(this.x, this.y);
+
+  // Named constructor
+  Point.origin() {
+    x = 0;
+    y = 0;
+  }
+}
+```
+
+Remember that constructors are not inherited, which means that a superclass’s named constructor is not inherited by a subclass. If you want a subclass to be created with a named constructor defined in the superclass, you must implement that constructor in the subclass.
+
+> 构造函数不能被集成，子类需要自己实现
+
+#### Invoking a non-default superclass constructor
+
+By default, a constructor in a subclass calls the superclass’s unnamed, no-argument constructor. The superclass’s constructor is called at the beginning of the constructor body. If an [initializer list](https://dart.dev/guides/language/language-tour#initializer-list) is also being used, it executes before the superclass is called. In summary, the order of execution is as follows:
+
+1. initializer list
+2. superclass’s no-arg constructor
+3. main class’s no-arg constructor
+
+If the superclass doesn’t have an unnamed, no-argument constructor, then you must manually call one of the constructors in the superclass. Specify the superclass constructor after a colon (`:`), just before the constructor body (if any).
+
+In the following example, the constructor for the Employee class calls the named constructor for its superclass, Person. Click **Run** to execute the code.
+
+<iframe src="https://dartpad.dev/embed-inline.html?id=e57aa06401e6618d4eb8&amp;split=90&amp;ga_id=non_default_superclass_constructor" width="100%" height="500px" style="box-sizing: border-box; color: rgb(33, 37, 41); font-family: Roboto, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 300; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(255, 255, 255); text-decoration-style: initial; text-decoration-color: initial; border: 1px solid rgb(204, 204, 204);"></iframe>
 
 
 
+Because the arguments to the superclass constructor are evaluated before invoking the constructor, an argument can be an expression such as a function call:
+
+```dart
+class Employee extends Person {
+  Employee() : super.fromJson(defaultData);
+  // ···
+}
+```
+
+ **Warning:** Arguments to the superclass constructor do not have access to `this`. For example, arguments can call static methods but not instance methods.
+
+#### Initializer list
+
+Besides invoking a superclass constructor, you can also initialize instance variables before the constructor body runs. Separate initializers with commas.
+
+```dart
+// Initializer list sets instance variables before
+// the constructor body runs.
+Point.fromJson(Map<String, num> json)
+    : x = json['x'],
+      y = json['y'] {
+  print('In Point.fromJson(): ($x, $y)');
+}
+```
+
+ **Warning:** The right-hand side of an initializer does not have access to `this`.
+
+During development, you can validate inputs by using `assert` in the initializer list.
+
+```dart
+Point.withAssert(this.x, this.y) : assert(x >= 0) {
+  print('In Point.withAssert(): ($x, $y)');
+}
+```
+
+Initializer lists are handy when setting up final fields. The following example initializes three final fields in an initializer list. Click **Run** to execute the code.
+
+<iframe src="https://dartpad.dev/embed-inline.html?id=7a9764702c0608711e08&amp;split=90&amp;ga_id=initializer_list" width="100%" height="420px" style="box-sizing: border-box; color: rgb(33, 37, 41); font-family: Roboto, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 300; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(255, 255, 255); text-decoration-style: initial; text-decoration-color: initial; border: 1px solid rgb(204, 204, 204);"></iframe>
 
 
 
+#### Redirecting constructors
 
+Sometimes a constructor’s only purpose is to redirect to another constructor in the same class. A redirecting constructor’s body is empty, with the constructor call appearing after a colon (:).
 
+```dart
+class Point {
+  num x, y;
 
+  // The main constructor for this class.
+  Point(this.x, this.y);
 
+  // Delegates to the main constructor.
+  Point.alongXAxis(num x) : this(x, 0);
+}
+```
 
+#### Constant constructors
 
+If your class produces objects that never change, you can make these objects compile-time constants. To do this, define a `const` constructor and make sure that all instance variables are `final`.
 
+```dart
+class ImmutablePoint {
+  static final ImmutablePoint origin =
+      const ImmutablePoint(0, 0);
 
+  final num x, y;
 
+  const ImmutablePoint(this.x, this.y);
+}
+```
 
+Constant constructors don’t always create constants. For details, see the section on [using constructors](https://dart.dev/guides/language/language-tour#using-constructors).
 
+> 牢记，const是compile-time常量，这点与Java不同
 
+#### Factory constructors
 
+Use the `factory` keyword when implementing a constructor that doesn’t always create a new instance of its class. For example, a factory constructor might return an instance from a cache, or it might return an instance of a subtype.
 
+The following example demonstrates a factory constructor returning objects from a cache:
 
+```dart
+class Logger {
+  final String name;
+  bool mute = false;
+
+  // _cache is library-private, thanks to
+  // the _ in front of its name.
+  static final Map<String, Logger> _cache =
+      <String, Logger>{};
+
+  factory Logger(String name) {
+    return _cache.putIfAbsent(
+        name, () => Logger._internal(name));
+  }
+
+  Logger._internal(this.name);
+
+  void log(String msg) {
+    if (!mute) print(msg);
+  }
+}
+```
+
+ **Note:** Factory constructors have no access to `this`.
+
+Invoke a factory constructor just like you would any other constructor:
+
+```dart
+var logger = Logger('UI');
+logger.log('Button clicked');
+```
+
+> factory关键字带来实例的灵活性，例如可以实现cache
+>
+> 变量命名之前加_，应该是某种特殊用法，library-private，暂时还不清楚，可能后面会讲到
+>
+> factory类型的构造函数，不能访问this
+
+### Methods
+
+Methods are functions that provide behavior for an object.
+
+#### Instance methods
+
+Instance methods on objects can access instance variables and `this`. The `distanceTo()` method in the following sample is an example of an instance method:
+
+```dart
+import 'dart:math';
+
+class Point {
+  num x, y;
+
+  Point(this.x, this.y);
+
+  num distanceTo(Point other) {
+    var dx = x - other.x;
+    var dy = y - other.y;
+    return sqrt(dx * dx + dy * dy);
+  }
+}
+```
+
+#### Getters and setters
+
+Getters and setters are special methods that provide read and write access to an object’s properties. Recall that each instance variable has an implicit getter, plus a setter if appropriate. You can create additional properties by implementing getters and setters, using the `get` and `set` keywords:
+
+```dart
+class Rectangle {
+  num left, top, width, height;
+
+  Rectangle(this.left, this.top, this.width, this.height);
+
+  // Define two calculated properties: right and bottom.
+  num get right => left + width;
+  set right(num value) => left = value - width;
+  num get bottom => top + height;
+  set bottom(num value) => top = value - height;
+}
+
+void main() {
+  var rect = Rectangle(3, 4, 20, 15);
+  assert(rect.left == 3);
+  rect.right = 12;
+  assert(rect.left == -8);
+}
+```
+
+With getters and setters, you can start with instance variables, later wrapping them with methods, all without changing client code.
+
+ **Note:** Operators such as increment (++) work in the expected way, whether or not a getter is explicitly defined. To avoid any unexpected side effects, the operator calls the getter exactly once, saving its value in a temporary variable.
 
 
 
