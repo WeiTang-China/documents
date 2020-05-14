@@ -2275,11 +2275,591 @@ For more information, see the [Dart language specification](https://dart.dev/gui
 > - 枚举使用enum关键字
 > - 每个enum项都默认有index这个属性，它是从0开始递增的
 > - enum可以在switch...case...中使用
-> - enum有两个限制：1、不能子类、mix in或者implement  2、不能显式的初始化它
+> - enum有两个限制：
+>   1. 不能子类、mix in或者implement
+>   2. 不能显式的初始化它
+
+### Adding features to a class: mixins
+
+Mixins are a way of reusing a class’s code in multiple class hierarchies.
+
+To *use* a mixin, use the `with` keyword followed by one or more mixin names. The following example shows two classes that use mixins:
+
+```dart
+class Musician extends Performer with Musical {
+  // ···
+}
+
+class Maestro extends Person
+    with Musical, Aggressive, Demented {
+  Maestro(String maestroName) {
+    name = maestroName;
+    canConduct = true;
+  }
+}
+```
+
+To *implement* a mixin, create a class that extends Object and declares no constructors. Unless you want your mixin to be usable as a regular class, use the `mixin` keyword instead of `class`. For example:
+
+```dart
+mixin Musical {
+  bool canPlayPiano = false;
+  bool canCompose = false;
+  bool canConduct = false;
+
+  void entertainMe() {
+    if (canPlayPiano) {
+      print('Playing piano');
+    } else if (canConduct) {
+      print('Waving hands');
+    } else {
+      print('Humming to self');
+    }
+  }
+}
+```
+
+To specify that only certain types can use the mixin — for example, so your mixin can invoke a method that it doesn’t define — use `on` to specify the required superclass:
+
+```dart
+mixin MusicalPerformer on Musician {
+  // ···
+}
+```
+
+> on关键字表示只有Musician的子类能使用with附加上MusicalPerformer
+
+ **Version note:** Support for the `mixin` keyword was introduced in Dart 2.1. Code in earlier releases usually used `abstract class` instead. For more information on 2.1 mixin changes, see the [Dart SDK changelog](https://github.com/dart-lang/sdk/blob/master/CHANGELOG.md) and [2.1 mixin specification.](https://github.com/dart-lang/language/blob/master/accepted/2.1/super-mixins/feature-specification.md#dart-2-mixin-declarations)
+
+> mixin机制比较难理解，并且Java不具备这种机制，要多看多理解
+>
+> 可以参考如下网页内容：
+>
+> https://juejin.im/post/5d3d9ccc6fb9a07ef81a45fb
+>
+> https://my.oschina.net/zzxzzg/blog/2962518
+>
+> https://medium.com/flutter-community/https-medium-com-shubhamhackzz-dart-for-flutter-mixins-in-dart-f8bb10a3d341
+
+### Class variables and methods
+
+Use the `static` keyword to implement class-wide variables and methods.
+
+#### Static variables
+
+Static variables (class variables) are useful for class-wide state and constants:
+
+```dart
+class Queue {
+  static const initialCapacity = 16;
+  // ···
+}
+
+void main() {
+  assert(Queue.initialCapacity == 16);
+}
+```
+
+Static variables aren’t initialized until they’re used.
+
+ **Note:** This page follows the [style guide recommendation](https://dart.dev/guides/language/effective-dart/style#identifiers) of preferring `lowerCamelCase` for constant names.
+
+#### Static methods
+
+Static methods (class methods) do not operate on an instance, and thus do not have access to `this`. For example:
+
+```dart
+import 'dart:math';
+
+class Point {
+  num x, y;
+  Point(this.x, this.y);
+
+  static num distanceBetween(Point a, Point b) {
+    var dx = a.x - b.x;
+    var dy = a.y - b.y;
+    return sqrt(dx * dx + dy * dy);
+  }
+}
+
+void main() {
+  var a = Point(2, 2);
+  var b = Point(4, 4);
+  var distance = Point.distanceBetween(a, b);
+  assert(2.8 < distance && distance < 2.9);
+  print(distance);
+}
+```
+
+ **Note:** Consider using top-level functions, instead of static methods, for common or widely used utilities and functionality.
+
+You can use static methods as compile-time constants. For example, you can pass a static method as a parameter to a constant constructor.
+
+## Generics
+
+If you look at the API documentation for the basic array type, [List,](https://api.dart.dev/stable/dart-core/List-class.html) you’ll see that the type is actually `List`. The <…> notation marks List as a *generic* (or *parameterized*) type—a type that has formal type parameters. [By convention](https://dart.dev/guides/language/effective-dart/design#do-follow-existing-mnemonic-conventions-when-naming-type-parameters), most type variables have single-letter names, such as E, T, S, K, and V.
+
+### Why use generics?
+
+Generics are often required for type safety, but they have more benefits than just allowing your code to run:
+
+- Properly specifying generic types results in better generated code.
+- You can use generics to reduce code duplication.
+
+If you intend for a list to contain only strings, you can declare it as `List` (read that as “list of string”). That way you, your fellow programmers, and your tools can detect that assigning a non-string to the list is probably a mistake. Here’s an example:
+
+```dart
+var names = List<String>();
+names.addAll(['Seth', 'Kathy', 'Lars']);
+names.add(42); // Error
+```
+
+Another reason for using generics is to reduce code duplication. Generics let you share a single interface and implementation between many types, while still taking advantage of static analysis. For example, say you create an interface for caching an object:
+
+```dart
+abstract class ObjectCache {
+  Object getByKey(String key);
+  void setByKey(String key, Object value);
+}
+```
+
+You discover that you want a string-specific version of this interface, so you create another interface:
+
+```dart
+abstract class StringCache {
+  String getByKey(String key);
+  void setByKey(String key, String value);
+}
+```
+
+Later, you decide you want a number-specific version of this interface… You get the idea.
+
+Generic types can save you the trouble of creating all these interfaces. Instead, you can create a single interface that takes a type parameter:
+
+```dart
+abstract class Cache<T> {
+  T getByKey(String key);
+  void setByKey(String key, T value);
+}
+```
+
+In this code, T is the stand-in type. It’s a placeholder that you can think of as a type that a developer will define later.
+
+> 使用泛型有两个好处：
+>
+> 1. 规定了参数类型，比如List<String>，传入num会报错
+> 2. 代码复用
+
+### Using collection literals
+
+List, set, and map literals can be parameterized. Parameterized literals are just like the literals you’ve already seen, except that you add `<type>` (for lists and sets) or `<keyType, valueType>` (for maps) before the opening bracket. Here is an example of using typed literals:
+
+```dart
+var names = <String>['Seth', 'Kathy', 'Lars'];
+var uniqueNames = <String>{'Seth', 'Kathy', 'Lars'};
+var pages = <String, String>{
+  'index.html': 'Homepage',
+  'robots.txt': 'Hints for web robots',
+  'humans.txt': 'We are people, not machines'
+};
+```
+
+> 列举了三种常用数据结构的泛型定义方式
+>
+
+### Using parameterized types with constructors
+
+To specify one or more types when using a constructor, put the types in angle brackets (`<...>`) just after the class name. For example:
+
+```dart
+var nameSet = Set<String>.from(names);
+```
+
+The following code creates a map that has integer keys and values of type View:
+
+```dart
+var views = Map<int, View>();
+```
+
+### Generic collections and the types they contain
+
+Dart generic types are *reified*, which means that they carry their type information around at runtime. For example, you can test the type of a collection:
+
+```dart
+var names = List<String>();
+names.addAll(['Seth', 'Kathy', 'Lars']);
+print(names is List<String>); // true
+```
+
+ **Note:** In contrast, generics in Java use *erasure*, which means that generic type parameters are removed at runtime. In Java, you can test whether an object is a List, but you can’t test whether it’s a `List`.
+
+### Restricting the parameterized type
+
+When implementing a generic type, you might want to limit the types of its parameters. You can do this using `extends`.
+
+```dart
+class Foo<T extends SomeBaseClass> {
+  // Implementation goes here...
+  String toString() => "Instance of 'Foo<$T>'";
+}
+
+class Extender extends SomeBaseClass {...}
+```
+
+It’s OK to use `SomeBaseClass` or any of its subclasses as generic argument:
+
+```dart
+var someBaseClassFoo = Foo<SomeBaseClass>();
+var extenderFoo = Foo<Extender>();
+```
+
+It’s also OK to specify no generic argument:
+
+```dart
+var foo = Foo();
+print(foo); // Instance of 'Foo<SomeBaseClass>'
+```
+
+Specifying any non-`SomeBaseClass` type results in an error:
+
+```dart
+var foo = Foo<Object>();
+```
+
+### Using generic methods
+
+Initially, Dart’s generic support was limited to classes. A newer syntax, called *generic methods*, allows type arguments on methods and functions:
+
+```dart
+T first<T>(List<T> ts) {
+  // Do some initial work or error checking, then...
+  T tmp = ts[0];
+  // Do some additional checking or processing...
+  return tmp;
+}
+```
+
+Here the generic type parameter on `first` (``) allows you to use the type argument `T` in several places:
+
+- In the function’s return type (`T`).
+- In the type of an argument (`List`).
+- In the type of a local variable (`T tmp`).
+
+For more information about generics, see [Using Generic Methods.](https://github.com/dart-lang/sdk/blob/master/pkg/dev_compiler/doc/GENERIC_METHODS.md)
 
 
 
+## Libraries and visibility
 
+The `import` and `library` directives can help you create a modular and shareable code base. Libraries not only provide APIs, but are a unit of privacy: identifiers that start with an underscore (_) are visible only inside the library. *Every Dart app is a library*, even if it doesn’t use a `library` directive.
+
+Libraries can be distributed using [packages](https://dart.dev/guides/packages).
+
+### Using libraries
+
+Use `import` to specify how a namespace from one library is used in the scope of another library.
+
+For example, Dart web apps generally use the [dart:html](https://api.dart.dev/stable/dart-html) library, which they can import like this:
+
+```dart
+import 'dart:html';
+```
+
+The only required argument to `import` is a URI specifying the library. For built-in libraries, the URI has the special `dart:` scheme. For other libraries, you can use a file system path or the `package:` scheme. The `package:` scheme specifies libraries provided by a package manager such as the pub tool. For example:
+
+```dart
+import 'package:test/test.dart';
+```
+
+ **Note:** *URI* stands for uniform resource identifier. *URLs* (uniform resource locators) are a common kind of URI.
+
+> Dart官方库使用dart作为URI的specific
+>
+> 自定义库使用package作为URI的specific，后面跟文件路径
+
+#### Specifying a library prefix
+
+If you import two libraries that have conflicting identifiers, then you can specify a prefix for one or both libraries. For example, if library1 and library2 both have an Element class, then you might have code like this:
+
+```dart
+import 'package:lib1/lib1.dart';
+import 'package:lib2/lib2.dart' as lib2;
+
+// Uses Element from lib1.
+Element element1 = Element();
+
+// Uses Element from lib2.
+lib2.Element element2 = lib2.Element();
+```
+
+#### Importing only part of a library
+
+If you want to use only part of a library, you can selectively import the library. For example:
+
+```dart
+// Import only foo.
+import 'package:lib1/lib1.dart' show foo;
+
+// Import all names EXCEPT foo.
+import 'package:lib2/lib2.dart' hide foo;
+```
+
+#### Lazily loading a library
+
+*Deferred loading* (also called *lazy loading*) allows a web app to load a library on demand, if and when the library is needed. Here are some cases when you might use deferred loading:
+
+- To reduce a web app’s initial startup time.
+- To perform A/B testing—trying out alternative implementations of an algorithm, for example.
+- To load rarely used functionality, such as optional screens and dialogs.
+
+ **Only dart2js supports deferred loading.** Flutter, the Dart VM, and dartdevc don’t support deferred loading. For more information, see [issue #33118](https://github.com/dart-lang/sdk/issues/33118) and [issue #27776.](https://github.com/dart-lang/sdk/issues/27776)
+
+To lazily load a library, you must first import it using `deferred as`.
+
+```dart
+import 'package:greetings/hello.dart' deferred as hello;
+```
+
+When you need the library, invoke `loadLibrary()` using the library’s identifier.
+
+```dart
+Future greet() async {
+  await hello.loadLibrary();
+  hello.printGreeting();
+}
+```
+
+In the preceding code, the `await` keyword pauses execution until the library is loaded. For more information about `async` and `await`, see [asynchrony support](https://dart.dev/guides/language/language-tour#asynchrony-support).
+
+You can invoke `loadLibrary()` multiple times on a library without problems. The library is loaded only once.
+
+Keep in mind the following when you use deferred loading:
+
+- A deferred library’s constants aren’t constants in the importing file. Remember, these constants don’t exist until the deferred library is loaded.
+- You can’t use types from a deferred library in the importing file. Instead, consider moving interface types to a library imported by both the deferred library and the importing file.
+- Dart implicitly inserts `loadLibrary()` into the namespace that you define using `deferred as namespace`. The `loadLibrary()` function returns a [Future](https://dart.dev/guides/libraries/library-tour#future).
+
+> 只有dart2js支持defferred load！
+
+### Implementing libraries
+
+See [Create Library Packages](https://dart.dev/guides/libraries/create-library-packages) for advice on how to implement a library package, including:
+
+- How to organize library source code.
+- How to use the `export` directive.
+- When to use the `part` directive.
+- When to use the `library` directive.
+- How to use conditional imports and exports to implement a library that supports multiple platforms.
+
+> 如何实现一个库？
+>
+> 内容比较多，需要另行展开
+
+
+
+## Asynchrony support
+
+Dart libraries are full of functions that return [Future](https://api.dart.dev/stable/dart-async/Future-class.html) or [Stream](https://api.dart.dev/stable/dart-async/Stream-class.html) objects. These functions are *asynchronous*: they return after setting up a possibly time-consuming operation (such as I/O), without waiting for that operation to complete.
+
+The `async` and `await` keywords support asynchronous programming, letting you write asynchronous code that looks similar to synchronous code.
+
+
+
+### Handling Futures
+
+When you need the result of a completed Future, you have two options:
+
+- Use `async` and `await`.
+- Use the Future API, as described [in the library tour](https://dart.dev/guides/libraries/library-tour#future).
+
+Code that uses `async` and `await` is asynchronous, but it looks a lot like synchronous code. For example, here’s some code that uses `await` to wait for the result of an asynchronous function:
+
+```dart
+await lookUpVersion();
+```
+
+To use `await`, code must be in an `async` function—a function marked as `async`:
+
+```dart
+Future checkVersion() async {
+  var version = await lookUpVersion();
+  // Do something with version
+}
+```
+
+ **Note:** Although an `async` function might perform time-consuming operations, it doesn’t wait for those operations. Instead, the `async` function executes only until it encounters its first `await` expression ([details](https://github.com/dart-lang/sdk/blob/master/docs/newsletter/20170915.md#synchronous-async-start)). Then it returns a Future object, resuming execution only after the `await` expression completes.
+
+Use `try`, `catch`, and `finally` to handle errors and cleanup in code that uses `await`:
+
+```dart
+try {
+  version = await lookUpVersion();
+} catch (e) {
+  // React to inability to look up the version
+}
+```
+
+You can use `await` multiple times in an `async` function. For example, the following code waits three times for the results of functions:
+
+```dart
+var entrypoint = await findEntrypoint();
+var exitCode = await runExecutable(entrypoint, args);
+await flushThenExit(exitCode);
+```
+
+In `await *expression*`, the value of `*expression*` is usually a Future; if it isn’t, then the value is automatically wrapped in a Future. This Future object indicates a promise to return an object. The value of `await *expression*` is that returned object. The await expression makes execution pause until that object is available.
+
+**If you get a compile-time error when using `await`, make sure `await` is in an `async` function.** For example, to use `await` in your app’s `main()` function, the body of `main()` must be marked as `async`:
+
+```dart
+Future main() async {
+  checkVersion();
+  print('In main: version is ${await lookUpVersion()}');
+}
+```
+
+
+
+### Declaring async functions
+
+An `async` function is a function whose body is marked with the `async` modifier.
+
+Adding the `async` keyword to a function makes it return a Future. For example, consider this synchronous function, which returns a String:
+
+```dart
+String lookUpVersion() => '1.0.0';
+```
+
+If you change it to be an `async` function—for example, because a future implementation will be time consuming—the returned value is a Future:
+
+```dart
+Future<String> lookUpVersion() async => '1.0.0';
+```
+
+Note that the function’s body doesn’t need to use the Future API. Dart creates the Future object if necessary. If your function doesn’t return a useful value, make its return type `Future`.
+
+For an interactive introduction to using futures, `async`, and `await`, see the [asynchronous programming codelab](https://dart.dev/codelabs/async-await).
+
+
+
+### Handling Streams
+
+When you need to get values from a Stream, you have two options:
+
+- Use `async` and an *asynchronous for loop* (`await for`).
+- Use the Stream API, as described [in the library tour](https://dart.dev/guides/libraries/library-tour#stream).
+
+ **Note:** Before using `await for`, be sure that it makes the code clearer and that you really do want to wait for all of the stream’s results. For example, you usually should **not** use `await for` for UI event listeners, because UI frameworks send endless streams of events.
+
+An asynchronous for loop has the following form:
+
+```dart
+await for (varOrType identifier in expression) {
+  // Executes each time the stream emits a value.
+}
+```
+
+The value of `expression` must have type Stream. Execution proceeds as follows:
+
+1. Wait until the stream emits a value.
+2. Execute the body of the for loop, with the variable set to that emitted value.
+3. Repeat 1 and 2 until the stream is closed.
+
+To stop listening to the stream, you can use a `break` or `return` statement, which breaks out of the for loop and unsubscribes from the stream.
+
+**If you get a compile-time error when implementing an asynchronous for loop, make sure the `await for` is in an `async` function.** For example, to use an asynchronous for loop in your app’s `main()` function, the body of `main()` must be marked as `async`:
+
+```dart
+Future main() async {
+  // ...
+  await for (var request in requestServer) {
+    handleRequest(request);
+  }
+  // ...
+}
+```
+
+For more information about asynchronous programming, in general, see the [dart:async](https://dart.dev/guides/libraries/library-tour#dartasync---asynchronous-programming) section of the library tour.
+
+> 使用await for，必须等待一个Stream对象来产生值
+
+
+
+## Generators
+
+When you need to lazily produce a sequence of values, consider using a *generator function*. Dart has built-in support for two kinds of generator functions:
+
+- **Synchronous** generator: Returns an **[Iterable](https://api.dart.dev/stable/dart-core/Iterable-class.html)** object.
+- **Asynchronous** generator: Returns a **[Stream](https://api.dart.dev/stable/dart-async/Stream-class.html)** object.
+
+To implement a **synchronous** generator function, mark the function body as `sync*`, and use `yield` statements to deliver values:
+
+```dart
+Iterable<int> naturalsTo(int n) sync* {
+  int k = 0;
+  while (k < n) yield k++;
+}
+```
+
+To implement an **asynchronous** generator function, mark the function body as `async*`, and use `yield` statements to deliver values:
+
+```dart
+Stream<int> asynchronousNaturalsTo(int n) async* {
+  int k = 0;
+  while (k < n) yield k++;
+}
+```
+
+If your generator is recursive, you can improve its performance by using `yield*`:
+
+```dart
+Iterable<int> naturalsDownFrom(int n) sync* {
+  if (n > 0) {
+    yield n;
+    yield* naturalsDownFrom(n - 1);
+  }
+}
+```
+
+> 写法可以死记硬背，关键是背后的原理难理解
+>
+> yield关键字是怎么执行的？为什么同步、异步都用它？
+>
+> 为什么yield*能提升性能？
+>
+> 满脑子是问号呀！
+
+
+
+## Callable classes
+
+To allow an instance of your Dart class to be called like a function, implement the `call()` method.
+
+In the following example, the `WannabeFunction` class defines a call() function that takes three strings and concatenates them, separating each with a space, and appending an exclamation. Click **Run** to execute the code.
+
+<iframe src="https://dartpad.dev/embed-inline.html?id=3723fcf3915ca935d13393b8a9f86fd5&amp;ga_id=callable_classes" width="100%" height="350px" data-gtm-vis-first-on-screen-13029053_11="455060658" data-gtm-vis-total-visible-time-13029053_11="100" data-gtm-vis-has-fired-13029053_11="1" style="box-sizing: border-box; color: rgb(33, 37, 41); font-family: Roboto, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 300; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(255, 255, 255); text-decoration-style: initial; text-decoration-color: initial; border: 1px solid rgb(204, 204, 204);"></iframe>
+
+> 确实很灵活，但不是已经有类似函数指针的用法了吗？
+>
+> 感觉这个没必要吧，可能还没有理解到精髓
+
+
+
+## Isolates
+
+Most computers, even on mobile platforms, have multi-core CPUs. To take advantage of all those cores, developers traditionally use shared-memory threads running concurrently. However, shared-state concurrency is error prone and can lead to complicated code.
+
+Instead of threads, all Dart code runs inside of *isolates*. Each isolate has its own memory heap, ensuring that no isolate’s state is accessible from any other isolate.
+
+For more information, see the following:
+
+- [Dart asynchronous programming: Isolates and event loops](https://medium.com/dartlang/dart-asynchronous-programming-isolates-and-event-loops-bffc3e296a6a)
+- [dart:isolate API reference,](https://api.dart.dev/stable/dart-isolate) including [Isolate.spawn()](https://api.dart.dev/stable/dart-isolate/Isolate/spawn.html) and [TransferableTypedData](https://api.dart.dev/stable/dart-isolate/TransferableTypedData-class.html)
+- [Background parsing](https://flutter.dev/docs/cookbook/networking/background-parsing) cookbook on the Flutter site
+- [Isolate sample app](https://github.com/flutter/samples/tree/master/isolate_example)
+
+> 多线程，重点知识，需要展开
+>
 
 
 
