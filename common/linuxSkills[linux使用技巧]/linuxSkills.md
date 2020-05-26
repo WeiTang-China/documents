@@ -84,6 +84,8 @@ mount [-fnrsvw] [-t vfstype] [-o options] device dir
 
 ### 2.1、vim快捷键
 
+![img](files/linuxSkills/vim-key.png)
+
 |  组  |  按键  | 说明                                                         |
 | :--: | :----: | ------------------------------------------------------------ |
 | 删除 |   x    | 删除光标所在字符，相当于del按键                              |
