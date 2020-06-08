@@ -192,6 +192,15 @@ git branch --set-upstream-to=origin/remote_branch  your_branch
 
 关联目的是在执行git pull, git push操作时就不需要指定对应的远程分支，你只要没有显示指定，git pull的时候，就会提示你。
 
+## 2.8、用repo仓库里的xml节点，同步代码
+
+使用工具：[files/syncProjectDir.sh](files/syncProjectDir.sh)
+
+```
+syncProjectDir.sh '<project ... />'
+或者直接 syncProjectDir.sh，在命令行里再输入
+```
+
 
 
 # 3、图解git
