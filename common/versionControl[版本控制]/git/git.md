@@ -194,11 +194,11 @@ git branch --set-upstream-to=origin/remote_branch  your_branch
 
 ## 2.8、用repo仓库里的xml节点，同步代码
 
-使用工具：[files/syncProjectDir.sh](files/syncProjectDir.sh)
+使用工具：[files/syncrepoproject.sh](files/syncrepoproject.sh)
 
 ```
-syncProjectDir.sh '<project ... />'
-或者直接 syncProjectDir.sh，在命令行里再输入
+syncrepoproject.sh '<project ... />'
+或者直接 syncrepoproject.sh，在命令行里再输入
 ```
 
 
