@@ -31,4 +31,6 @@ startingWindow，启动过渡页面
   netstat -natp：n表示禁用域名解析功能；a表示所有；t表示仅查询tcp；p表示显示进程
   mmap系统调用：
   sendfile系统调用：0内存拷贝
+  
+Zram linux kernel document：https://www.kernel.org/doc/Documentation/blockdev/zram.txt
 

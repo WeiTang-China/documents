@@ -201,6 +201,22 @@ syncrepoproject.sh '<project ... />'
 或者直接 syncrepoproject.sh，在命令行里再输入
 ```
 
+## 2.9、查询两个分支的最近共同祖先
+
+使用命令`git merge-base <commit1/branch1> <commit2/branch2>`
+
+```shell
+git merge-base stablePVT master
+```
+
+进一步查询分离之后的提交：
+
+```
+git log <since>..<until>
+或者更直接用两个分支查询
+git log master..stablePVT
+```
+
 
 
 # 3、图解git
