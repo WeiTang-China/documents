@@ -219,6 +219,16 @@ git log master..stablePVT
 
 
 
+## 2.10、查询本地分支 && 查询远程对应分支
+
+查询本地分支`git symbolic-ref --short -q HEAD`
+
+查询远程对应分支`git rev-parse --abbrev-ref local_branch@{upstream}`
+
+如果local_branch填空，则取当前本地分支的对应远程分支
+
+
+
 # 3、图解git
 
 ## 3.1、基本用法
