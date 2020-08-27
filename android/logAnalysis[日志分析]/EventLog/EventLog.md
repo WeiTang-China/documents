@@ -108,7 +108,7 @@ am_proc_start:[0,9227,10002,com.android.browser,contentprovider,com.android.brow
 | 30065 | am_on_top_resumed_lost_called   | User, Component Name, Reason                                 | The activity's onTopResumedActivityChanged(false) has been called |
 | 30066 | am_add_to_stopping              | User, Token, Component Name, Reason                          | An activity been add into stopping list                      |
 
-#### Activity启动实例
+#### Activity启动实例【android Q】
 
 以一个activity的生命周期为例说明：
 
@@ -153,7 +153,7 @@ am_proc_start:[0,9227,10002,com.android.browser,contentprovider,com.android.brow
 | 2725  | power_screen_broadcast_send    | wakelockCount                                                | This is logged when the screen on broadcast has completed    |
 | 2726  | power_screen_broadcast_done    | on, broadcastDuration, wakelockCount                         | This is logged when the screen broadcast has completed       |
 | 2727  | power_screen_broadcast_stop    | which, wakelockCount                                         | This is logged when the screen on broadcast has completed    |
-| 2728  | power_screen_state             | offOrOn, becauseOfUser, totalTouchDownTime, touchCycles, latency | This is logged when the screen is turned on or off<br/>offOrOn：1亮屏、2灭屏<br/>becauseOfUser（灭屏）：1deviceAdmin、2userPowerButton、3screenTimeout、4proximitySensor<br/>位于Notifier.handleLateInteractiveChange() |
+| 2728  | power_screen_state             | offOrOn, becauseOfUser, totalTouchDownTime, touchCycles, latency | This is logged when the screen is turned on or off<br/>offOrOn：1亮屏、0灭屏<br/>becauseOfUser（灭屏）：1deviceAdmin、2userPowerButton、3screenTimeout、4proximitySensor<br/>位于Notifier.handleLateInteractiveChange() |
 | 2729  | power_partial_wake_state       | releasedorAcquired, tag                                      | This is logged when the partial wake lock (keeping the device awake regardless of whether the screen is off) is acquired or released |
 | 2731  | power_soft_sleep_requested     | savedwaketimems                                              | The device is being asked to go into a soft sleep (typically by the ungaze gesture).<br/>It logs the time remaining before the device would've normally gone to sleep without the request. |
 | 2739  | battery_saver_mode             | fullPrevOffOrOn, adaptivePrevOffOrOn, fullNowOffOrOn, adaptiveNowOffOrOn, interactive, features, reason | Power save state has changed. See BatterySaverController.java for the details |
@@ -244,6 +244,10 @@ am_proc_start:[0,9227,10002,com.android.browser,contentprovider,com.android.brow
 
 ### 【android R】
 
+Tips：android R升级对WMS做了重构，把很多task、stack、activity的管理转到了WMS模块，所有很多`am_`开头的event，重命名为`wm_`开头了
+
+[原始日志传送门](files/events-0801_180304.txt)
+
 ```c
 // Process 596 is serviceManager
 01-06 12:02:52.092   596   596 I auditd  : SELinux: Loaded service_contexts from:
@@ -281,6 +285,31 @@ am_proc_start:[0,9227,10002,com.android.browser,contentprovider,com.android.brow
 08-01 18:02:56.602  3344  3344 I wm_on_resume_called: [210442508,com.oppo.launcher.Launcher,RESUME_ACTIVITY]
 08-01 18:02:56.610  3344  3344 I wm_on_top_resumed_gained_called: [210442508,com.oppo.launcher.Launcher,topStateChangedWhenResumed]
 08-01 18:02:56.778  1662  1864 I boot_progress_enable_screen: 38027
+// keyguard shown
+08-01 18:02:57.073  1662  2622 I wm_set_keyguard_shown: [1,0,0,setKeyguardShown]
+08-01 18:02:57.074  1662  2622 I wm_pause_activity: [0,210442508,com.oppo.launcher/.Launcher,userLeaving=false]
+08-01 18:02:57.078  1662  2622 I wm_add_to_stopping: [0,210442508,com.oppo.launcher/.Launcher,makeInvisible]
+08-01 18:02:57.093  3344  3344 I wm_on_top_resumed_lost_called: [210442508,com.oppo.launcher.Launcher,topStateChangedWhenResumed]
+08-01 18:02:57.096  3344  3344 I wm_on_paused_called: [210442508,com.oppo.launcher.Launcher,performPause]
+08-01 18:02:57.099  1662  1864 I wm_stop_activity: [0,210442508,com.oppo.launcher/.Launcher]
+08-01 18:02:57.142  3344  3344 I wm_on_stop_called: [210442508,com.oppo.launcher.Launcher,STOP_ACTIVITY_ITEM]
+08-01 18:02:59.100  1662  1864 I wm_boot_animation_done: 40350
+08-01 18:02:59.215  1662  1864 I uc_finish_user_boot: 0
+08-01 18:02:59.215  1662  1864 I am_user_state_changed: [0,1]
+08-01 18:02:59.217  1662  1864 I uc_send_user_broadcast: [0,android.intent.action.LOCKED_BOOT_COMPLETED]
+08-01 18:02:59.275  1662  1864 I uc_finish_user_unlocking: 0
+08-01 18:02:59.508  1662  1861 I am_user_state_changed: [0,2]
+08-01 18:02:59.617  1662  1928 I uc_finish_user_unlocked: 0
+// unlock phone & show launcher
+08-01 18:03:01.285  2836  2836 I sysui_lockscreen_gesture: [1,145,1748]
+08-01 18:03:01.555  1662  2616 I wm_set_keyguard_shown: [1,0,1,keyguardGoingAway]
+08-01 18:03:01.573  1662  2616 I wm_set_resumed_activity: [0,com.oppo.launcher/.Launcher,resumeTopActivityInnerLocked]
+08-01 18:03:01.575  1662  2616 I wm_resume_activity: [0,210442508,2,com.oppo.launcher/.Launcher]
+08-01 18:03:01.623  3344  3344 I wm_on_restart_called: [210442508,com.oppo.launcher.Launcher,performRestartActivity]
+08-01 18:03:01.637  3344  3344 I wm_on_start_called: [210442508,com.oppo.launcher.Launcher,handleStartActivity]
+08-01 18:03:01.643  3344  3344 I wm_on_resume_called: [210442508,com.oppo.launcher.Launcher,RESUME_ACTIVITY]
+08-01 18:03:01.643  3344  3344 I wm_on_top_resumed_gained_called: [210442508,com.oppo.launcher.Launcher,topWhenResuming]
+// all be done.
 ```
 
 

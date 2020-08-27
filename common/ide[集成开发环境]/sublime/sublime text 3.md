@@ -50,7 +50,7 @@ import urllib.request,os; pf = 'Package Control.sublime-package'; ipp = sublime.
 | **搜索** | Ctrl + :         | 打开搜索框，自动带#，输入关键字，查找文件中的变量名、属性名等 |
 |          |                  |                                                              |
 | **文件** | Ctrl + P         | 搜索项目中的文件                                             |
-|          |                  |                                                              |
+| **文件** | Alt+O，          | 在C/C++中切换h文件和c/cpp                                    |
 |          |                  |                                                              |
 |          |                  |                                                              |
 |          |                  |                                                              |
