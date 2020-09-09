@@ -67,7 +67,5 @@
 # References
 
 - [ART 下的方法内联策略及其对 Android 热修复方案的影响](https://cloud.tencent.com/developer/article/1005604)
-- [Android ART运行时无缝替换Dalvik虚拟机的过程分析](https://blog.csdn.net/luoshengyang/article/details/18006645)
-- [Android运行时ART加载类和方法的过程分析](https://blog.csdn.net/luoshengyang/article/details/39533503)
-- [Android运行时ART加载OAT文件的过程分析](https://blog.csdn.net/luoshengyang/article/details/39307813)
-- [Android运行时ART执行类方法的过程分析](https://blog.csdn.net/luoshengyang/article/details/40289405)
+
+  
