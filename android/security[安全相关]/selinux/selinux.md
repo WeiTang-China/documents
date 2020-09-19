@@ -150,7 +150,7 @@ The split SEPolicy is loaded as described below:
 
 - 单独编译selinux_policy，确保没有nerverallow, 编译命令如下
 
-  ./mk_android.sh -t user -m selinux_policy -N
+  xxxxxxxx -t user -m selinux_policy -N
 
 - 手机端编译修改，确保没有policy编译错误，命令如下
 

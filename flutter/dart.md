@@ -3044,7 +3044,427 @@ To parse Dart code and generate HTML documentation, you can use the SDK’s [doc
 
 
 
-# A tour of the core libraries
+# [A tour of the core libraries](https://dart.dev/guides/language/language-tour)
+
+This page shows you how to use the major features in Dart’s core libraries. It’s just an overview, and by no means comprehensive. Whenever you need more details about a class, consult the [Dart API reference.](https://api.dart.dev/stable)
+
+- [dart:core](https://dart.dev/guides/libraries/library-tour#dartcore---numbers-collections-strings-and-more)
+
+  Built-in types, collections, and other core functionality. This library is automatically imported into every Dart program.
+
+- [dart:async](https://dart.dev/guides/libraries/library-tour#dartasync---asynchronous-programming)
+
+  Support for asynchronous programming, with classes such as Future and Stream.
+
+- [dart:math](https://dart.dev/guides/libraries/library-tour#dartmath---math-and-random)
+
+  Mathematical constants and functions, plus a random number generator.
+
+- [dart:convert](https://dart.dev/guides/libraries/library-tour#dartconvert---decoding-and-encoding-json-utf-8-and-more)
+
+  Encoders and decoders for converting between different data representations, including JSON and UTF-8.
+
+- [dart:html](https://dart.dev/guides/libraries/library-tour#darthtml)
+
+  DOM and other APIs for browser-based apps.
+
+- [dart:io](https://dart.dev/guides/libraries/library-tour#dartio)
+
+  I/O for programs that can use the Dart VM, including Flutter apps, servers, and command-line scripts.
+
+This page is just an overview; it covers only a few dart:* libraries and no third-party libraries.
+
+Other places to find library information are the [pub.dev site](https://pub.dev/) and the [Dart web developer library guide](https://dart.dev/web/libraries). You can find API documentation for all dart:* libraries in the [Dart API reference](https://api.dart.dev/stable) or, if you’re using Flutter, the [Flutter API reference.](https://api.flutter.dev/)
+
+ **DartPad tip:** You can play with the code in this page by copying it into a [DartPad.](https://dartpad.dev/)
+
+> DartPad是一个线上编辑工具。
+>
+
+## dart:core - numbers, collections, strings, and more
+
+The dart:core library ([API reference](https://api.dart.dev/stable/dart-core/dart-core-library.html)) provides a small but critical set of built-in functionality. This library is automatically imported into every Dart program.
+
+> 默认自带的内置包
+
+### Printing to the console
+
+The top-level `print()` method takes a single argument (any Object) and displays that object’s string value (as returned by `toString()`) in the console.
+
+```dart
+print(anObject);
+print('I drink $tea.');
+```
+
+For more information on basic strings and `toString()`, see [Strings](https://dart.dev/guides/language/language-tour#strings) in the language tour.
+
+### Numbers
+
+The dart:core library defines the num, int, and double classes, which have some basic utilities for working with numbers.
+
+You can convert a string into an integer or double with the `parse()` methods of int and double, respectively:
+
+```dart
+assert(int.parse('42') == 42);
+assert(int.parse('0x42') == 66);
+assert(double.parse('0.50') == 0.5);
+```
+
+Or use the parse() method of num, which creates an integer if possible and otherwise a double:
+
+```dart
+assert(num.parse('42') is int);
+assert(num.parse('0x42') is int);
+assert(num.parse('0.50') is double);
+```
+
+To specify the base of an integer, add a `radix` parameter:
+
+```dart
+assert(int.parse('42', radix: 16) == 66);
+```
+
+Use the `toString()` method to convert an int or double to a string. To specify the number of digits to the right of the decimal, use [toStringAsFixed().](https://api.dart.dev/stable/dart-core/num/toStringAsFixed.html) To specify the number of significant digits in the string, use [toStringAsPrecision():](https://api.dart.dev/stable/dart-core/num/toStringAsPrecision.html)
+
+```dart
+// Convert an int to a string.
+assert(42.toString() == '42');
+
+// Convert a double to a string.
+assert(123.456.toString() == '123.456');
+
+// Specify the number of digits after the decimal.
+assert(123.456.toStringAsFixed(2) == '123.46');
+
+// Specify the number of significant figures.
+assert(123.456.toStringAsPrecision(2) == '1.2e+2');
+assert(double.parse('1.2e+2') == 120.0);
+```
+
+For more information, see the API documentation for [int,](https://api.dart.dev/stable/dart-core/int-class.html) [double,](https://api.dart.dev/stable/dart-core/double-class.html) and [num.](https://api.dart.dev/stable/dart-core/num-class.html) Also see the [dart:math section](https://dart.dev/guides/libraries/library-tour#dartmath---math-and-random).
+
+### Strings and regular expressions
+
+A string in Dart is an immutable sequence of UTF-16 code units. The language tour has more information about [strings](https://dart.dev/guides/language/language-tour#strings). You can use regular expressions (RegExp objects) to search within strings and to replace parts of strings.
+
+The String class defines such methods as `split()`, `contains()`, `startsWith()`, `endsWith()`, and more.
+
+#### Searching inside a string
+
+You can find particular locations within a string, as well as check whether a string begins with or ends with a particular pattern. For example:
+
+```dart
+// Check whether a string contains another string.
+assert('Never odd or even'.contains('odd'));
+
+// Does a string start with another string?
+assert('Never odd or even'.startsWith('Never'));
+
+// Does a string end with another string?
+assert('Never odd or even'.endsWith('even'));
+
+// Find the location of a string inside a string.
+assert('Never odd or even'.indexOf('odd') == 6);
+```
+
+#### Extracting data from a string
+
+You can get the individual characters from a string as Strings or ints, respectively. To be precise, you actually get individual UTF-16 code units; high-numbered characters such as the treble clef symbol (‘\u{1D11E}’) are two code units apiece.
+
+You can also extract a substring or split a string into a list of substrings:
+
+```dart
+// Grab a substring.
+assert('Never odd or even'.substring(6, 9) == 'odd');
+
+// Split a string using a string pattern.
+var parts = 'structured web apps'.split(' ');
+assert(parts.length == 3);
+assert(parts[0] == 'structured');
+
+// Get a UTF-16 code unit (as a string) by index.
+assert('Never odd or even'[0] == 'N');
+
+// Use split() with an empty string parameter to get
+// a list of all characters (as Strings); good for
+// iterating.
+for (var char in 'hello'.split('')) {
+  print(char);
+}
+
+// Get all the UTF-16 code units in the string.
+var codeUnitList =
+    'Never odd or even'.codeUnits.toList();
+assert(codeUnitList[0] == 78);
+```
+
+#### Converting to uppercase or lowercase
+
+You can easily convert strings to their uppercase and lowercase variants:
+
+```dart
+// Convert to uppercase.
+assert('structured web apps'.toUpperCase() ==
+    'STRUCTURED WEB APPS');
+
+// Convert to lowercase.
+assert('STRUCTURED WEB APPS'.toLowerCase() ==
+    'structured web apps');
+```
+
+ **Note:** These methods don’t work for every language. For example, the Turkish alphabet’s dotless *I* is converted incorrectly.
+
+#### Trimming and empty strings
+
+Remove all leading and trailing white space with `trim()`. To check whether a string is empty (length is zero), use `isEmpty`.
+
+```dart
+// Trim a string.
+assert('  hello  '.trim() == 'hello');
+
+// Check whether a string is empty.
+assert(''.isEmpty);
+
+// Strings with only white space are not empty.
+assert('  '.isNotEmpty);
+```
+
+#### Replacing part of a string
+
+Strings are immutable objects, which means you can create them but you can’t change them. If you look closely at the [String API reference,](https://api.dart.dev/stable/dart-core/String-class.html) you’ll notice that none of the methods actually changes the state of a String. For example, the method `replaceAll()` returns a new String without changing the original String:
+
+```dart
+var greetingTemplate = 'Hello, NAME!';
+var greeting =
+    greetingTemplate.replaceAll(RegExp('NAME'), 'Bob');
+
+// greetingTemplate didn't change.
+assert(greeting != greetingTemplate);
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

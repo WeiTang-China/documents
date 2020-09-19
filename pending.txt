@@ -34,3 +34,5 @@ startingWindow，启动过渡页面
   
 Zram linux kernel document：https://www.kernel.org/doc/Documentation/blockdev/zram.txt
 
+更新EventLog在R上的变化
+
