@@ -217,8 +217,6 @@ git log <since>..<until>
 git log master..stablePVT
 ```
 
-
-
 ## 2.10、查询本地分支 && 查询远程对应分支
 
 查询本地分支`git symbolic-ref --short -q HEAD`
@@ -226,6 +224,22 @@ git log master..stablePVT
 查询远程对应分支`git rev-parse --abbrev-ref local_branch@{upstream}`
 
 如果local_branch填空，则取当前本地分支的对应远程分支
+
+查询远程仓库名称`git remote`
+
+## 2.11、查询分支是否包含某个提交
+
+查询远程分支中，有哪些包含了某个提交，可以使用如下命令，结果会输出若干远程分支名称
+
+```
+git branch -r --contains <commitId>
+```
+
+也可以查询本地分支是否包含，则可以使用如下命令，结果会输出本地分支名称
+
+```
+git branch --contains <commitId>
+```
 
 
 
