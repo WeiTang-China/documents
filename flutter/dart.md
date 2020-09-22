@@ -3044,7 +3044,7 @@ To parse Dart code and generate HTML documentation, you can use the SDK’s [doc
 
 
 
-# [A tour of the core libraries](https://dart.dev/guides/language/language-tour)
+# [A tour of the core libraries](https://dart.dev/guides/libraries/library-tour)
 
 This page shows you how to use the major features in Dart’s core libraries. It’s just an overview, and by no means comprehensive. Whenever you need more details about a class, consult the [Dart API reference.](https://api.dart.dev/stable)
 
@@ -3242,15 +3242,179 @@ var greeting =
 assert(greeting != greetingTemplate);
 ```
 
+#### Building a string
 
+To programmatically generate a string, you can use StringBuffer. A StringBuffer doesn’t generate a new String object until `toString()` is called. The `writeAll()` method has an optional second parameter that lets you specify a separator—in this case, a space.
 
+```dart
+var sb = StringBuffer();
+sb
+  ..write('Use a StringBuffer for ')
+  ..writeAll(['efficient', 'string', 'creation'], ' ')
+  ..write('.');
 
+var fullString = sb.toString();
 
+assert(fullString ==
+    'Use a StringBuffer for efficient string creation.');
+```
 
+#### Regular expressions
 
+The RegExp class provides the same capabilities as JavaScript regular expressions. Use regular expressions for efficient searching and pattern matching of strings.
 
+```dart
+// Here's a regular expression for one or more digits.
+var numbers = RegExp(r'\d+');
 
+var allCharacters = 'llamas live fifteen to twenty years';
+var someDigits = 'llamas live 15 to 20 years';
 
+// contains() can use a regular expression.
+assert(!allCharacters.contains(numbers));
+assert(someDigits.contains(numbers));
+
+// Replace every match with another string.
+var exedOut = someDigits.replaceAll(numbers, 'XX');
+assert(exedOut == 'llamas live XX to XX years');
+```
+
+You can work directly with the RegExp class, too. The Match class provides access to a regular expression match.
+
+```dart
+var numbers = RegExp(r'\d+');
+var someDigits = 'llamas live 15 to 20 years';
+
+// Check whether the reg exp has a match in a string.
+assert(numbers.hasMatch(someDigits));
+
+// Loop through all matches.
+for (var match in numbers.allMatches(someDigits)) {
+  print(match.group(0)); // 15, then 20
+}
+```
+
+#### More information
+
+Refer to the [String API reference](https://api.dart.dev/stable/dart-core/String-class.html) for a full list of methods. Also see the API reference for [StringBuffer,](https://api.dart.dev/stable/dart-core/StringBuffer-class.html) [Pattern,](https://api.dart.dev/stable/dart-core/Pattern-class.html) [RegExp,](https://api.dart.dev/stable/dart-core/RegExp-class.html) and [Match.](https://api.dart.dev/stable/dart-core/Match-class.html)
+
+### Collections
+
+Dart ships with a core collections API, which includes classes for lists, sets, and maps.
+
+#### Lists
+
+As the language tour shows, you can use literals to create and initialize [lists](https://dart.dev/guides/libraries/library-tour#lists). Alternatively, use one of the List constructors. The List class also defines several methods for adding items to and removing items from lists.
+
+```dart
+// Use a List constructor.
+var vegetables = List();
+
+// Or simply use a list literal.
+var fruits = ['apples', 'oranges'];
+
+// Add to a list.
+fruits.add('kiwis');
+
+// Add multiple items to a list.
+fruits.addAll(['grapes', 'bananas']);
+
+// Get the list length.
+assert(fruits.length == 5);
+
+// Remove a single item.
+var appleIndex = fruits.indexOf('apples');
+fruits.removeAt(appleIndex);
+assert(fruits.length == 4);
+
+// Remove all elements from a list.
+fruits.clear();
+assert(fruits.isEmpty);
+```
+
+Use `indexOf()` to find the index of an object in a list:
+
+```dart
+var fruits = ['apples', 'oranges'];
+
+// Access a list item by index.
+assert(fruits[0] == 'apples');
+
+// Find an item in a list.
+assert(fruits.indexOf('apples') == 0);
+```
+
+Sort a list using the `sort()` method. You can provide a sorting function that compares two objects. This sorting function must return < 0 for *smaller*, 0 for the *same*, and > 0 for *bigger*. The following example uses `compareTo()`, which is defined by [Comparable](https://api.dart.dev/stable/dart-core/Comparable-class.html) and implemented by String.
+
+```dart
+var fruits = ['bananas', 'apples', 'oranges'];
+
+// Sort a list.
+fruits.sort((a, b) => a.compareTo(b));
+assert(fruits[0] == 'apples');
+```
+
+Lists are parameterized types, so you can specify the type that a list should contain:
+
+```dart
+// This list should contain only strings.
+var fruits = List<String>();
+
+fruits.add('apples');
+var fruit = fruits[0];
+assert(fruit is String);
+fruits.add(5); // Error: 'int' can't be assigned to 'String'
+```
+
+Refer to the [List API reference](https://api.dart.dev/stable/dart-core/List-class.html) for a full list of methods.
+
+#### Sets
+
+A set in Dart is an unordered collection of unique items. Because a set is unordered, you can’t get a set’s items by index (position).
+
+```dart
+var ingredients = Set();
+ingredients.addAll(['gold', 'titanium', 'xenon']);
+assert(ingredients.length == 3);
+
+// Adding a duplicate item has no effect.
+ingredients.add('gold');
+assert(ingredients.length == 3);
+
+// Remove an item from a set.
+ingredients.remove('gold');
+assert(ingredients.length == 2);
+```
+
+Use `contains()` and `containsAll()` to check whether one or more objects are in a set:
+
+```dart
+var ingredients = Set();
+ingredients.addAll(['gold', 'titanium', 'xenon']);
+
+// Check whether an item is in the set.
+assert(ingredients.contains('titanium'));
+
+// Check whether all the items are in the set.
+assert(ingredients.containsAll(['titanium', 'xenon']));
+```
+
+An intersection is a set whose items are in two other sets.
+
+```dart
+var ingredients = Set();
+ingredients.addAll(['gold', 'titanium', 'xenon']);
+
+// Create the intersection of two sets.
+var nobleGases = Set.from(['xenon', 'argon']);
+var intersection = ingredients.intersection(nobleGases);
+assert(intersection.length == 1);
+assert(intersection.contains('xenon'));
+```
+
+> intersection方法查找两个Set中相同的元素并构建一个新的Set，这个操作有点意思
+
+Refer to the [Set API reference](https://api.dart.dev/stable/dart-core/Set-class.html) for a full list of methods.
 
 
 
