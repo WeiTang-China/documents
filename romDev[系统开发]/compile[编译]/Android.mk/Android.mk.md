@@ -104,7 +104,6 @@ include $(CLEAR_VARS)
 
 ```makefile
 include $(BUILD_EXECUTABLE)
-    
 ```
 
 **注意：**大多数 Android 应用不包含可执行文件，但它们对于创建单元测试和其他调试工具很有用。
@@ -164,9 +163,8 @@ include $(PREBUILT_SHARED_LIBRARY)
 
 ```makefile
 ifeq ($(TARGET_PLATFORM),android-22)
-        # ... do something ...
-    endif
-    
+    # ... do something ...
+endif
 ```
 
 ### TARGET_ARCH_ABI
@@ -188,9 +186,8 @@ ifeq ($(TARGET_PLATFORM),android-22)
 
 ```makefile
 ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
-      # ... do something ...
-    endif
-    
+    # ... do something ...
+endif
 ```
 
 要详细了解架构 ABI 和相关兼容性问题，请参阅 [ABI 管理](https://developer.android.com/ndk/guides/abis?hl=zh-cn)。
@@ -203,9 +200,8 @@ ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
 
 ```makefile
 ifeq ($(TARGET_ABI),android-22-arm64-v8a)
-      # ... do something ...
-    endif
-    
+    # ... do something ...
+endif
 ```
 
 ## 模块描述变量
@@ -224,7 +220,6 @@ ifeq ($(TARGET_ABI),android-22-arm64-v8a)
 
 ```makefile
 LOCAL_PATH := $(call my-dir)
-    
 ```
 
 `CLEAR_VARS` 所指向的脚本不会清除此变量。因此，即使 `Android.mk` 文件描述了多个模块，您也只需定义它一次。
@@ -235,7 +230,6 @@ LOCAL_PATH := $(call my-dir)
 
 ```makefile
 LOCAL_MODULE := "foo"
-    
 ```
 
 如果希望生成的模块使用除“`lib` + `LOCAL_MODULE` 的值”以外的名称，您可使用 `LOCAL_MODULE_FILENAME` 变量为生成的模块指定自己选择的名称。
@@ -247,7 +241,6 @@ LOCAL_MODULE := "foo"
 ```makefile
 LOCAL_MODULE := foo
     LOCAL_MODULE_FILENAME := libnewfoo
-    
 ```
 
 对于共享库模块，此示例将生成一个名为 `libnewfoo.so` 的文件。
@@ -268,14 +261,12 @@ LOCAL_MODULE := foo
 
 ```makefile
 LOCAL_CPP_EXTENSION := .cxx
-    
 ```
 
 您可以使用此变量指定多个扩展名。例如：
 
 ```makefile
 LOCAL_CPP_EXTENSION := .cxx .cpp .cc
-    
 ```
 
 ### LOCAL_CPP_FEATURES
@@ -288,21 +279,18 @@ LOCAL_CPP_EXTENSION := .cxx .cpp .cc
 
 ```makefile
 LOCAL_CPP_FEATURES := rtti
-    
 ```
 
 要指明您的代码使用 C++ 异常，请输入：
 
 ```makefile
 LOCAL_CPP_FEATURES := exceptions
-    
 ```
 
 您还可以为此变量指定多个值。例如：
 
 ```makefile
 LOCAL_CPP_FEATURES := rtti features
-    
 ```
 
 描述值的顺序无关紧要。
@@ -313,14 +301,12 @@ LOCAL_CPP_FEATURES := rtti features
 
 ```makefile
 LOCAL_C_INCLUDES := sources/foo
-    
 ```
 
 或者甚至：
 
 ```makefile
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/<subdirectory>/foo
-    
 ```
 
 请在通过 `LOCAL_CFLAGS` 或 `LOCAL_CPPFLAGS` 设置任何对应的包含标记前定义此变量。
@@ -337,7 +323,6 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/<subdirectory>/foo
 
 ```makefile
 LOCAL_CFLAGS += -I<path>,
-    
 ```
 
 但是，最好使用 `LOCAL_C_INCLUDES`，因为这样也可以使用可用于 ndk-gdb 原生调试的路径。
@@ -370,7 +355,6 @@ LOCAL_CFLAGS += -I<path>,
 
 ```makefile
 LOCAL_LDLIBS := -lz
-    
 ```
 
 如需了解此 NDK 版本中可以链接的公开系统库列表，请参阅 [Android NDK 原生 API](https://developer.android.com/ndk/guides/stable_apis?hl=zh-cn)。
@@ -383,7 +367,6 @@ LOCAL_LDLIBS := -lz
 
 ```makefile
 LOCAL_LDFLAGS += -fuse-ld=bfd
-    
 ```
 
 **注意**：如果为静态库定义此变量，编译系统会忽略此变量，并且 ndk-build 会显示一则警告。
@@ -402,14 +385,12 @@ LOCAL_LDFLAGS += -fuse-ld=bfd
 
 ```makefile
 LOCAL_ARM_MODE := arm
-    
 ```
 
 您也可以对源文件名附加 `.arm` 后缀，指示编译系统在 `arm` 模式下仅编译特定的源文件。例如，以下示例指示编译系统在 ARM 模式下始终编译 `bar.c`，但根据 `LOCAL_ARM_MODE` 的值编译 `foo.c`。
 
 ```makefile
 LOCAL_SRC_FILES := foo.c bar.c.arm
-    
 ```
 
 **注意**：您也可以在 [`Application.mk`](https://developer.android.com/ndk/guides/application_mk?hl=zh-cn) 文件中将 `APP_OPTIM` 设置为 `debug`，以强制编译系统生成 ARM 二进制文件。指定 `debug` 会强制执行 ARM 编译，因为工具链调试程序无法正确处理 Thumb 代码。
@@ -424,7 +405,6 @@ LOCAL_SRC_FILES := foo.c bar.c.arm
 
 ```makefile
 LOCAL_SRC_FILES = foo.c.neon bar.c zoo.c.arm.neon
-    
 ```
 
 如果同时使用这两个后缀，则 `.arm` 必须在 `.neon` 前面。
@@ -452,7 +432,6 @@ include $(CLEAR_VARS)
     LOCAL_CFLAGS := -DBAR=2
     LOCAL_STATIC_LIBRARIES := foo
     include $(BUILD_SHARED_LIBRARY)
-    
 ```
 
 在此例中，编译系统在编译 `bar.c` 时会向编译器传递 `-DFOO=1` 和 `-DBAR=2` 标记。它还会在模块的 `LOCAL_CFLAGS` 前面加上导出的标记，以便您轻松进行替换。
@@ -493,7 +472,6 @@ include $(CLEAR_VARS)
     LOCAL_SRC_FILES := bar.c
     LOCAL_STATIC_LIBRARIES := foo
     include $(BUILD_SHARED_LIBRARY)
-    
 ```
 
 在此示例中，编译系统在编译 `libbar.so` 时，在链接器命令的末尾指定了 `-llog`。这样就会告知链接器，由于 `libbar.so` 依赖于 `foo`，因此它也依赖于系统日志记录库。
@@ -534,7 +512,6 @@ LOCAL_SRC_FILES  := foo.c bar.S
 
     foo.c --1--> $OBJS_DIR/foo.S.original --2--> $OBJS_DIR/foo.S --3--> $OBJS_DIR/foo.o
     bar.S                                 --2--> $OBJS_DIR/bar.S --3--> $OBJS_DIR/bar.o
-    
 ```
 
 “1”对应于编译器，“2”对应于过滤器，“3”对应于汇编程序。过滤器必须是一个独立的 shell 命令，它接受输入文件名作为第一个参数，接受输出文件名作为第二个参数。例如：
@@ -542,7 +519,6 @@ LOCAL_SRC_FILES  := foo.c bar.S
 ```makefile
 myasmfilter $OBJS_DIR/foo.S.original $OBJS_DIR/foo.S
     myasmfilter bar.S $OBJS_DIR/bar.S
-    
 ```
 
 ## NDK 提供的函数宏
@@ -557,7 +533,6 @@ myasmfilter $OBJS_DIR/foo.S.original $OBJS_DIR/foo.S
 
 ```makefile
 LOCAL_PATH := $(call my-dir)
-    
 ```
 
 由于 GNU Make 的工作方式，这个宏实际返回的是编译系统解析编译脚本时包含的最后一个 makefile 的路径。因此，包含其他文件后就不应调用 `my-dir`。
@@ -567,14 +542,12 @@ LOCAL_PATH := $(call my-dir)
 ```makefile
 LOCAL_PATH := $(call my-dir)
 
-    # ... declare one module
+# ... declare one module
 
-    include $(LOCAL_PATH)/foo/`Android.mk`
+include $(LOCAL_PATH)/foo/`Android.mk`
+LOCAL_PATH := $(call my-dir)
 
-    LOCAL_PATH := $(call my-dir)
-
-    # ... declare another module
-    
+# ... declare another module
 ```
 
 该示例的问题在于，对 `my-dir` 的第二次调用将 `LOCAL_PATH` 定义为 `$PATH/foo`，而不是 `$PATH`，因为这是其最近的 include 所指向的位置。
@@ -584,32 +557,28 @@ LOCAL_PATH := $(call my-dir)
 ```makefile
 LOCAL_PATH := $(call my-dir)
 
-    # ... declare one module
+# ... declare one module
 
-    LOCAL_PATH := $(call my-dir)
+LOCAL_PATH := $(call my-dir)
 
-    # ... declare another module
+# ... declare another module
 
-    # extra includes at the end of the Android.mk file
-    include $(LOCAL_PATH)/foo/Android.mk
-    
+# extra includes at the end of the Android.mk file
+include $(LOCAL_PATH)/foo/Android.mk    
 ```
 
 如果以这种方式构造文件不可行，请将第一个 `my-dir` 调用的值保存到另一个变量中。例如：
 
 ```makefile
 MY_LOCAL_PATH := $(call my-dir)
+LOCAL_PATH := $(MY_LOCAL_PATH)
 
-    LOCAL_PATH := $(MY_LOCAL_PATH)
+# ... declare one module
 
-    # ... declare one module
+include $(LOCAL_PATH)/foo/`Android.mk`
+LOCAL_PATH := $(MY_LOCAL_PATH)
 
-    include $(LOCAL_PATH)/foo/`Android.mk`
-
-    LOCAL_PATH := $(MY_LOCAL_PATH)
-
-    # ... declare another module
-    
+# ... declare another module    
 ```
 
 ### all-subdir-makefiles
@@ -636,7 +605,6 @@ MY_LOCAL_PATH := $(call my-dir)
 
 ```makefile
 $(call import-module,<name>)
-    
 ```
 
 在此示例中，编译系统在 `NDK_MODULE_PATH` 环境变量所引用的目录列表中查找具有 `` 标记的模块，并且自动包含其 `Android.mk` 文件。
