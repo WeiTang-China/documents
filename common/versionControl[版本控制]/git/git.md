@@ -243,6 +243,94 @@ git branch --contains <commitId>
 
 
 
+## 2.12、cherry-pick 或者 revert 某个merge提交
+
+merge提交因为有多个parent，所以不能直接cherry-pick或者revert，需要用-m或者--mainline指定parent。
+
+```
+git cherry-pick -m 1 <commit-hash>
+git revert -m 1 <commit-hash>
+```
+
+这里有两个问题需要认知：
+
+1、如何找到-m参数需要的数字？
+
+2、执行完的效果是什么？
+
+
+
+我们基于如下图的情况来理解发生了什么
+
+![img](files/git/v2-ceac607d0e98a9b8b09afa48e2ac3223_720w.jpg)
+
+
+
+1、如何找到-m参数需要的数字？（推荐使用方法2）
+
+可以使用命令`git show <commit-hash>`来查看提交的parent顺序，最前面的序号1，并依次递增，例如：
+
+```shell
+$ git show commit5
+commit commit5………………
+Merge: commit4 feature-commit2
+…………………………
+
+# 主基线(commit4)=1, feature分支(feature-commit2)=2
+```
+
+或者使用命令`git show <commit-hash>^@`，最上面的序号1，并依次递增，例如：
+
+```shell
+$ git show commit5^@
+commit commit4………………
+Author: …………
+Date: …………
+    ……………………(commit msg)
+
+commit feature-commit2………………
+Author: …………
+Date: …………
+    ……………………(commit msg)
+
+# 主基线(commit4)=1, feature分支(feature-commit2)=2@
+```
+
+推荐使用第二种方法来确定parent number的序号，因为可以看见commit msg，你懂的！
+
+
+
+2、执行完的效果是什么？
+
+只要理解git show是展示当前节点代表的提交，git cherry-pick是拿改动过来合并，git revert是回退某些改动，就可以理解-m填写后的效果了。
+
+作者就是在这上面绕了弯路，鬼打墙，其实很简单的道理。
+
+以上面的例子继续：
+
+```shell
+$ git cherry-pick -m 1 commit5
+# 等同于把feature分支上的改动都合并过来，也就是feature-commit2 + feature-commit1
+# 是不是有点和第一感觉上是反的？为什么选的是m1，拿到的是feature分支的改动？
+# 实际上，这个操作相当于把如下改动合并过来：
+#   git diff commit5 commit5^1
+# 或者
+#   git diff commit5 commit4
+# 以差异的方式去理解，是不是豁然开朗了？
+# 把和主分支上不一致的那些改动合并过来，说的就是feature分支上的所有改动
+```
+
+同理，理解revert就不难了
+
+```shell
+$ git revert -m 1 commit5
+# 等同于把feature分支的改动都revert掉，并形成一个新提交
+```
+
+
+
+
+
 # 3、图解git
 
 ## 3.1、基本用法
