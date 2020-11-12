@@ -1,10 +1,13 @@
 #!/bin/bash
 
+# DEBUG_LOG is empty: close 
+DEBUG_LOG=Y
+
 #check if git env
 CUR_WORK_STATUS=`git branch 2>/dev/null`
 if [ "$?" != "0" ]
 then
-    echo "`pwd` is not a valid git folder"
+    echo "[FAIL] `pwd` is not a valid git folder"
     exit -1
 fi
 
@@ -44,7 +47,7 @@ done
 # ${string%*chars}	从 string 字符串第一次出现 *chars 的位置开始，截取 *chars 左边的所有字符。
 # ${string%%*chars}	从 string 字符串最后一次出现 *chars 的位置开始，截取 *chars 左边的所有字符。
 
-CUR_BRANCH=`git branch -vv | grep \* | awk '{print $4}'`
+CUR_BRANCH=`git branch -vv |awk '$1 == "*" {print $4}'`
 # 掐头去尾，去掉最外面的[]
 CUR_BRANCH=${CUR_BRANCH:1:`expr ${#CUR_BRANCH}-2`}
 # 第一个/左边的是remote名称，一般是origin
@@ -56,9 +59,21 @@ CUR_BRANCH=${CUR_BRANCH%%:*}
 
 PUSH_TYPE=$(git config push.type)
 
-echo "[INFO] REMOTE_NAME=$REMOTE_NAME"
-echo "[INFO] CUR_BRANCH=$CUR_BRANCH"
-echo "[INFO] PUSH_TYPE=$PUSH_TYPE"
+if [ "$REMOTE_NAME" == "" ]
+then
+    REMOTE_NAME=$(git remote)
+fi
+
+[ $DEBUG_LOG ] && echo "[DEBUG] REMOTE_NAME=$REMOTE_NAME"
+[ $DEBUG_LOG ] && echo "[DEBUG] CUR_BRANCH=$CUR_BRANCH"
+[ $DEBUG_LOG ] && echo "[DEBUG] PUSH_TYPE=$PUSH_TYPE"
+
+if [ "$CUR_BRANCH" == "" ]
+then
+    echo "[FAIL] can't get branch info! please check it"
+    exit -1
+fi
+
 
 if [ "$PUSH_TYPE" = "" ] || [ "$PUSH_TYPE" = "direct" ]; then
     echo "git push$PASS_GIT_CMD_PARAM $REMOTE_NAME $CUR_BRANCH"
@@ -69,17 +84,17 @@ elif [ "$PUSH_TYPE" = "gerrit" ]; then
 elif [ "$PUSH_TYPE" = "tfs" ]; then
     read -p "Input your branch name: " self_defined_branch
     if [ -z "${self_defined_branch}" ] ; then
-        echo "[Error] can't be empty"
+        echo "[WARN] can't be empty"
         read -p "Input your branch name again: " self_defined_branch
         if [ -z "${self_defined_branch}" ] ; then
-            echo "[ERROR] empty branch name! Bye!"
+            echo "[FAIL] empty branch name! Bye!"
             exit -3
         fi
     fi
     echo "git push$PASS_GIT_CMD_PARAM $REMOTE_NAME $CUR_BRANCH:${self_defined_branch}"
     git push$PASS_GIT_CMD_PARAM $REMOTE_NAME $CUR_BRANCH:${self_defined_branch}
 else
-    echo "UNKNOWN push.type=${PUSH_TYPE}!!!"
+    echo "[FAIL] UNKNOWN push.type=${PUSH_TYPE}!!!"
     echo "You can set push.type as below:"
     echo "  direct or unset : git put origin branch_name"
     echo "  gerrit : git put origin HEAD:refs/for/branch_name"

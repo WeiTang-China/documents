@@ -1,17 +1,38 @@
 #!/bin/bash
 
-#[ "$1" == "" ] && echo "#ERROR# please input '<project ... />', copy it from version xml." && exit 101
+# defined const
+FIXED_DIR=~/code
+GERRIT_USER_NAME=tangwei1
+DEFAULT_GERRIT_SERVER=
 
-PROJECT_XML=$1
-while [ "$PROJECT_XML" == "" ]
+# parse params start
+while getopts "d:" ARG
 do
-    echo "copy/paste '<project ... />' from version.xml:"
-    read PROJECT_XML
+    case $ARG in
+        d)
+            echo "[INFO] set default gerrit server(used when remote is empty): $OPTARG"
+            DEFAULT_GERRIT_SERVER=$OPTARG
+            ;;
+        ?)
+            break;;
+    esac
 done
 
-PROJECT_XML=$(echo $PROJECT_XML |grep -E "^<project .*/>$")
+shift $((OPTIND-1))
+ORIGIN_PROJECT_XML=$1
+# parse params ended
 
-[ "$PROJECT_XML" == "" ] && echo "#ERROR# invalid format: $PROJECT_XML" && exit 102
+while [ "$ORIGIN_PROJECT_XML" == "" ]
+do
+    echo "copy/paste '<project ... />' from version.xml:"
+    read ORIGIN_PROJECT_XML
+done
+
+[ "$FIXED_DIR" != "" ] && cd $FIXED_DIR 
+
+PROJECT_XML=$(echo $ORIGIN_PROJECT_XML |grep -E "^<project .*>$")
+
+[ "$PROJECT_XML" == "" ] && echo "#ERROR# invalid format: $ORIGIN_PROJECT_XML" && exit 102
 
 echo "[INFO] PROJECT_XML=$PROJECT_XML"
 
@@ -24,6 +45,7 @@ REVISION=$(awk -F "\"" '$1 == "revision="{print $2}' $FILE_PROJECT_XML_LINES)
 UPSTREAM=$(awk -F "\"" '$1 == "upstream="{print $2}' $FILE_PROJECT_XML_LINES)
 rm $FILE_PROJECT_XML_LINES
 
+[ "$REMOTE" == "" ] && REMOTE=$DEFAULT_GERRIT_SERVER
 case $REMOTE in
     "gerrit.odm") REMOTE="odm"
     ;;
@@ -32,6 +54,8 @@ case $REMOTE in
     "gerrit.q") REMOTE="q"
     ;;
     "gerrit.p") REMOTE="p"
+    ;;
+    "gerrit.realme.odm") REMOTE="realme.odm"
     ;;
     "") REMOTE="main"
     ;;
@@ -42,13 +66,15 @@ esac
 
 [ "$NAME" == "" ] && echo "#ERROR# empty NAME!!!" && exit 104
 [ "$REVISION" == "" ] && echo "#ERROR# empty REVISION!!!" && exit 105
-[ "$UPSTREAM" == "" ] && echo "#ERROR# empty UPSTREAM!!!" && exit 106
 
 echo "[INFO] NAME=$NAME"
 echo "[INFO] REMOTE=$REMOTE"
 echo "[INFO] REVISION=$REVISION"
 echo "[INFO] UPSTREAM=$UPSTREAM"
 echo " "
+
+# UPSTREAM can be empty, if empty, use REVISION
+[ "$UPSTREAM" == "" ] && UPSTREAM=$REVISION 
 
 [ ! -e $REMOTE/$NAME ] && mkdir -p $REMOTE/$NAME
 
@@ -59,22 +85,33 @@ if [ ! -e $REMOTE/$NAME/.git ]; then
     [ "$?" != "0" ] && echo "#ERROR# fail to git clone" && exit 107
 fi
 
+if [ ! -e $REMOTE/$NAME/.git/hooks/commit-msg ]; then
+    scp -p -P 29418 tangwei1@gerrit.${GERRIT_PREFIX}scm.adc.com:hooks/commit-msg $REMOTE/$NAME/.git/hooks/
+    [ "$?" != "0" ] && echo "[WARNING] fail to scp hooks"
+fi
+
 cd $REMOTE/$NAME
 echo "[DEBUG] clear local changes..."
 git add . -A &>/dev/null
 git reset --hard &>/dev/null
-echo "[DEBUG] git pull -r"
-git pull -r
+echo "[DEBUG] git fetch origin $UPSTREAM"
+git fetch origin $UPSTREAM
 echo "[DEBUG] git checkout $UPSTREAM"
 git checkout $UPSTREAM
+#echo "[DEBUG] gitsync.sh $UPSTREAM"
+#gitsync.sh $UPSTREAM
 [ "$?" != "0" ] && echo "#ERROR# fail to git checkout" && exit 108
 if [ "$REVISION" != "$UPSTREAM" ];
 then
     echo "[DEBUG] git reset --hard $REVISION"
     git reset --hard $REVISION
     [ "$?" != "0" ] && echo "#ERROR# fail to git reset" && exit 109
+else
+    echo "[DEBUG] git reset --hard origin/$UPSTREAM"
+    git reset --hard origin/$UPSTREAM
+    [ "$?" != "0" ] && echo "#ERROR# fail to git pull" && exit 110
 fi
 
 echo "****************************************************************"
-echo $REMOTE/$NAME
+echo $FIXED_DIR/$REMOTE/$NAME
 echo SUCCESS, BYE!!!
