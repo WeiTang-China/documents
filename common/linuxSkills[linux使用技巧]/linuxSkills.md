@@ -111,6 +111,56 @@ man -M PATH cmd
 
 
 
+### 1.3、awk
+
+语法：
+
+```
+awk [选项参数] 'script' var=value file(s)
+或
+awk [选项参数] -f scriptfile var=value file(s)
+```
+
+常用用法1：打印某一列的内容
+
+```
+awk '{print $2}' file_name
+```
+
+常用用法2：加过滤条件
+
+例如，查询第1列等于某个值
+
+```
+awk '$1 == "*" {print $3}' file_name
+```
+
+从例子可以看出，这里的*不需要转义，并且如果加了转义还会报警告
+
+例如，查询匹配某个值，则用~//，不匹配用~! //
+
+```
+awk '$1 ~ /love/ {print}' //
+```
+
+常用用法3：BEGIN...END
+
+```
+awk 'BEGIN{FS=","} {print $1,$2}'     log.txt
+或者
+ls -l *.txt | awk '{sum+=$5} END {print sum}'
+```
+
+常用用法4：传入自定义参数
+
+```
+git branch -vv |awk -v AWK_BRANCH="$INPUT_BRANCH" '$1 == AWK_BRANCH {print $3}'
+```
+
+注意：awk命令中不需要$访问变量，直接写变量名即可
+
+
+
 
 
 
