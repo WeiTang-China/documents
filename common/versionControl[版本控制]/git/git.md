@@ -217,7 +217,7 @@ git log <since>..<until>
 git log master..stablePVT
 ```
 
-## 2.10、查询本地分支 && 查询远程对应分支
+## 2.10、查询分支相关信息
 
 查询本地分支`git symbolic-ref --short -q HEAD`
 
@@ -226,6 +226,15 @@ git log master..stablePVT
 如果local_branch填空，则取当前本地分支的对应远程分支
 
 查询远程仓库名称`git remote`
+
+查询本地是否存在某个分支：
+
+```
+方法1
+git show-branch refs/heads/$PARAM_BRANCH_NAME
+```
+
+
 
 ## 2.11、查询分支是否包含某个提交
 

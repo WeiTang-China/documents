@@ -161,7 +161,94 @@ git branch -vv |awk -v AWK_BRANCH="$INPUT_BRANCH" '$1 == AWK_BRANCH {print $3}'
 
 
 
+### 1.4、数组操作
 
+字符串解析成数组：
+
+```shell
+local local_OLD_IFS=$IFS
+IFS="+" #你可以换成需要切分的字符，比如","
+YOUR_DEFINED_ARRAY=($YOUR_INPUT_STRING)
+IFS=$local_OLD_IFS
+```
+
+数组合并成字符串：
+
+```shell
+local local_OLD_IFS=$IFS
+IFS="+" #你可以换成需要切分的字符，比如","
+YOUR_INPUT_STRING=${YOUR_DEFINED_ARRAY[*]}
+IFS=$local_OLD_IFS
+```
+
+获取数组长度：
+
+```shell
+${#array[@]}
+```
+
+遍历数组方法一：
+
+```shell
+for(( i=0;i<${#array[@]};i++ )) do
+	echo ${array[i]}
+done
+```
+
+遍历数组方法二：
+
+```shell
+for element in ${array[@]}
+# 也可以写成for element in ${array[*]}
+do
+	echo $element
+done
+```
+
+
+
+### 1.5、字符串操作
+
+trim()去掉头尾空格：
+
+```shell
+# 方法一
+sed 's/ *$//g'
+# 方法二
+sed -e 's/^[[:space:]]*//'
+```
+
+比较字符串大小
+
+```
+[[ "2020-01-23" > "2020-01-22" ]] && echo YES
+```
+
+
+
+### 1.6、tr
+
+tr 指令从标准输入设备读取数据，经过字符串转译后，将结果输出到标准输出设备。
+
+！！！针对字符处理的，没有字符串的概念
+
+删除所有空格
+
+```
+$ echo "  www.  sina.com.cn " |tr -d ' '
+www.sina.com.cn
+```
+
+转换小写为大写
+
+```
+$ echo "www.sina.com.cn" |tr a-z A-Z
+WWW.SINA.COM.CN
+
+$ echo "www.sina.com.cn" |tr sina SINA
+www.SINA.com.cN
+从这个例子可以看出，并不能匹配字符串的概念，只会针对每个字符处理
+```
 
 
 
