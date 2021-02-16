@@ -36,3 +36,9 @@ Zram linux kernel document：https://www.kernel.org/doc/Documentation/blockdev/zr
 
 更新EventLog在R上的变化
 
+整理收录有用的adb命令：https://www.cnblogs.com/hellokitty2/p/10491828.html
+
+进程各种id：pid、pgid、sid、全局pid、局部pid：https://blog.csdn.net/qq_33160790/article/details/81346663
+
+全方位理解Android权限之底层实现：https://cloud.tencent.com/developer/article/1578473
+
