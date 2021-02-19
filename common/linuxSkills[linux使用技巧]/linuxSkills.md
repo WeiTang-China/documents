@@ -159,6 +159,15 @@ git branch -vv |awk -v AWK_BRANCH="$INPUT_BRANCH" '$1 == AWK_BRANCH {print $3}'
 
 注意：awk命令中不需要$访问变量，直接写变量名即可
 
+常用用法5：执行系统命令
+
+```shell
+# 打印所有进程的fd占用情况
+ls /proc |grep -E "^[0-9]+$" |awk '{cmd="ls -l /proc/"$0"/fd"; print("----- "$0" -----"); system(cmd)}'
+```
+
+
+
 
 
 ### 1.4、数组操作
