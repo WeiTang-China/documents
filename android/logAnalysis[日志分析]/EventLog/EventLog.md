@@ -240,6 +240,101 @@ am_proc_start:[0,9227,10002,com.android.browser,contentprovider,com.android.brow
 
 
 
+## 性能相关的某些tags
+
+### am_activity_launch_time（界面启动时间）
+
+```
+1 2 1551  1573 | am_activity_launch_time: [0,248545817,cn.example.wx/com.android.browser.BrowserLauncher,4432,4432] 
+```
+
+日志格式：界面名+时间+时间，其中第一个时间：框架触发这个界面启动直到应用画完第一帧的时间，第二个时间：假如该界面做了activity forwarding或是在启动界面期间在，启动另一个界面并自我结束，结束时间则会以最后一个界面画完为结束点。界面启动时间过长，不仅用户会感到卡顿，严重会导致Key Dispatch Timeout ANR。
+
+解决方法：
+
+- 优化在主线程的长执行时间的代码
+- 将磁盘读写移到子线程
+
+### content_query_sample（数据库查询时间）
+
+当数据库查询时间>慢执行时间门槛值500ms会印出，当数据库查询时间<500ms则随机印出数据库查询时间，日志格式如下
+
+```x'm
+content_query_sample:[content://mms-sms/threadID?recipient=1310000000399,_id,,,170,cn.example.databackup,35
+```
+
+数据库的Uri+数据库查询指令细节Selected fields(* 则打印成空字符串),where sortby + 执行数据库查询的时间+假如数据库查询是执行在主线程上，会显示的应用名称；在子线程上则是空字符串 +相对与慢执行时间门槛值的占比
+
+解决方法：
+
+- 将在主线程上的数据库查询，移至子线程。
+- 若是该数据库查询结果将显示给用户，则在子线程上的数据库查询建议少于1000ms
+- 若是该数据库查询仅供后台之用，则在子线程上的数据库查询也因少于2000ms，以避免其他应用被数据库同步锁延迟过久。
+
+### content_update_sample（数据库内容更新时间）
+
+当数据库更新时间>慢执行时间门槛值500ms会印出，当数据库更新时间<500ms则随机印出，一般日志中更新指令有：insert、bulkinsert 、delete 、update。
+
+```x'm
+content_update_sample:[content://cn.example.wx/alarm,bulkinsert,,165,cn.example.databackup,34
+```
+
+数据库的Uri+数据库查询指令细节Selected fields(* 则打印成空字符串),where sortby + 执行数据库查询的时间+假如数据库查询是执行在主线程上，会显示的应用名称；在子线程上则是空字符串 +相对与慢执行时间门槛值的占比
+
+解决方法：
+
+- 将在主线程上的数据库更新，移至子线程。
+- 若是该数据库更新随后将显示给用户，则在子线程上的数据库查询+数据库更新建议少于1000ms
+- 若是该数据库更新仅供后台之用，则在子线程上的数据库查询也因少于2000ms，以避免其他应用被数据库同步锁延迟过久。
+
+### binder_sample（跨进程通讯执行时间）
+
+跨进程通讯执行时间计算始自客户端执行接口，终于客户端收到服务端回复；当跨进程执行时间 >慢执行时间门槛值500ms 会印出，跨进程执行时间 <500ms则随机印出
+
+```x'm
+binder_sample:[com.android.internal.telephony.ITelephony,40,2531,com.Qunar,100]
+```
+
+执行跨进程通信的客户端类名+跨进程执行的接口编号+跨进程执行时间+执行跨进程通讯的客户端进程名+相对与慢执行时间门槛值的占比
+
+解决方法：
+
+优化在服务端的长执行时间的代码。例如磁盘读写，缩短执行流程等
+
+跨进程执行事件编号查询
+
+AIDL（Android Interface Define Language），是android用以定义客户端和服务端之间实现进程间通信接口。AIDL在编译阶段先被编译成一IInterface类为基础的Java代码。在Java代码中，每个接口被皆被分派一个接口编号，这编号便是binder_sample上的接口编号，如何找到接口编号？(以ITelephony的接口编号40为例)
+
+•ROM编译完后在所有的aidl编译出的对应Java代码放在out/target/common/obj 下。直接在该文件夹以及子文件夹，以grep查找类名（例如ITelephony）。文件名因为类名.java(例如ITelephony.java)，注意一个特例，IActivityManager类与源代码一起放在framework/base/core/java/android/app/IActivityManager.java
+
+- 1. 打开ITelephony.java文件
+- 1. 找到FIRST_CALL_TRANSATION位置
+- 1. 所有的接口编号都由IBinder的第一个接口编号1号起算。在本例中，Itelephony的第40号接口，要找android.os.IBinder.FIRST_CALL_TRANSATION+39
+
+### dvm_lock_sample（同步锁锁定时间）
+
+同步锁锁定时间>慢执行时间门槛值500ms会印出，同步锁锁定时间<500ms则随机印出
+
+```
+----- system/core/logcat/event.logtags -----
+# Dalvik VM / ART
+20003 dvm_lock_sample (process|3),(main|1|5),(thread|3),(time|1|3),(file|3),(line|1|5),(ownerfile|3),(ownerline|1|5),(sample_percent|1|6)
+dvm_lock_sample:[com.android.settings,1,main,45,ManageApplications.java,1317,ApplicationsState.java,323,9]
+
+----- art/runtime/monitor_android.cc -----
+Monitor::LogContentionEvent()
+
+Q和R上都已经会输出方法名称了，但event.logtags没有同步修改
+```
+
+进程名+该线程是否为StrictMode会监控的对象+等待同步锁的线程名+等待同步锁的代码所在文件及行号+执行同步锁锁定的代码所在文件及行号；若是锁定与等待同步锁代码在同一个文件的话，显示空字符+相对与慢执行时间门槛值的占比
+
+解决方法:
+
+审查同步锁的必要性，拿掉不需要的同步锁。假如是必要的，优化执行同步锁子线程需要持续抓住同步锁的时间。
+
+
+
 ## 开机Boot启动实例解析
 
 ### 【android R】

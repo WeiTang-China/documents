@@ -103,6 +103,88 @@
 
    
 
+## union
+
+union共用体，也叫联合体，在一个“联合”内可以定义多种不同的数据类型， 一个被说明为该“联合”类型的变量中，允许装入该“联合”所定义的任何一种数据，这些数据共享同一段内存，以达到节省空间的目的。**union变量所占用的内存长度等于最长的成员的内存长度。**
+
+下面是关于union的例子：
+
+```c++
+union test
+{
+     char mark;
+     long num;
+     float score;
+};
+```
+
+sizeof(union test)的值为4。因为共用体将一个char类型的mark、一个long类型的num变量和一个float类型的score变量存放在**同一个地址开始的内存单元**中，而char类型和long类型所占的内存字节数是不一样的，但是在union中都是从同一个地址存放的，也就是使用的覆盖技术，这三个变量互相覆盖，而这种使几个不同的变量共占同一段内存的结构，称为“共用体”类型的结构。
+
+**因union中的所有成员起始地址都是一样的，所以&a.mark、&a.num和&a.score的值都是一样的。**
+
+不能如下使用：
+
+```c++
+union test a;
+printf("%d", a); //错误
+```
+
+由于a的存储区有好几种类型，分别占不同长度的存储区，仅写共用体变量名a，这样使编译器无法确定究竟输出的哪一个成员的值。
+
+```c++
+printf("%d", a.mark);  //正确
+```
+
+
+
+**测试大小端**
+
+union的一个用法就是可以用来测试CPU是大端模式还是小端模式：
+
+[![复制代码](files/c++/copycode.gif)](javascript:void(0);)
+
+```c++
+#include <iostream>
+using namespace std;
+
+void checkCPU()
+{
+    union MyUnion{
+        int a;
+        char c;
+    }test;
+    test.a = 1;
+    if (test.c == 1)
+        cout << "little endian" <<endl;
+    else cout << "big endian" <<endl;
+}
+```
+
+
+
+**C++中union**
+
+上面总结的union使用法则，在C++中依然适用。如果加入对象呢？
+
+```c++
+class CA
+{
+     int m_a;
+};
+
+union Test
+{
+     CA a;
+     double d;
+};
+```
+
+上面代码运行没有问题。
+
+但是，如果在类CA中**添加了构造函数，或者添加析构函数，就会发现程序会出现错误。**由于union里面的东西共享内存，所以不能定义静态、引用类型的变量。由于在union里也不允许存放带有构造函数、析构函数和复制构造函数等的类的对象，但是可以存放对应的类对象指针。编译器无法保证类的构造函数和析构函数得到正确的调用，由此，就可能出现内存泄漏。所以，在C++中使用union时，尽量保持C语言中使用union的风格，尽量不要让union带有对象。
+
+
+
 ## cast<>
 
 ### static_cast
